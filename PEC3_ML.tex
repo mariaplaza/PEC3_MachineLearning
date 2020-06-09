@@ -115,20 +115,6 @@
 
 \usepackage[spanish]{babel}
 \usepackage{subfig}
-\usepackage{booktabs}
-\usepackage{longtable}
-\usepackage{array}
-\usepackage{multirow}
-\usepackage{wrapfig}
-\usepackage{float}
-\usepackage{colortbl}
-\usepackage{pdflscape}
-\usepackage{tabu}
-\usepackage{threeparttable}
-\usepackage{threeparttablex}
-\usepackage[normalem]{ulem}
-\usepackage{makecell}
-\usepackage{xcolor}
 
 \title{Machine Learning (M0-163)}
 \usepackage{etoolbox}
@@ -137,9 +123,9 @@
   \apptocmd{\@title}{\par {\large #1 \par}}{}{}
 }
 \makeatother
-\subtitle{Tercera prueba de evaluación continua - Cancer de mama}
+\subtitle{Tercera prueba de evaluación continua - Cáncer de mama}
 \author{María Plaza García}
-\date{9 de Juni, 2020}
+\date{12 de Juni, 2020}
 
 \begin{document}
 \maketitle
@@ -186,8 +172,11 @@ los archivos creados para la realización de esta PEC:
 
 En esta PEC se analizan estos datos mediante la implementación de los
 diferentes algoritmos estudiados: k-Nearest Neighbour, Naive Bayes,
-Artificial Neural Network, Support Vector Machine, Arbol de Decisión y
-Random Forest para diagnosticar el tipo de cáncer de mama.
+Artificial Neural Network, Support Vector Machine, Árbol de Decisión y
+Random Forest para diagnosticar el tipo de cáncer de mama. Para ello se
+ha empleado la función de cada algoritmo como se presenta en Lantz
+(\protect\hyperlink{ref-lantz2015machine}{2015}) y el paquete
+\texttt{caret} en alguno de los casos.
 
 \hypertarget{trabajando-con-los-datos}{%
 \section{Trabajando con los datos}\label{trabajando-con-los-datos}}
@@ -218,7 +207,7 @@ acceso, de esta forma podemos leer los datos con el siguiente código:
 datos}\label{exploraciuxf3n-y-preparaciuxf3n-de-los-datos}}
 
 Comprobamos que el dataset está completo y se presentan los seis
-primeros registros:
+primeros registros de las 6 primeras variables:
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -232,17 +221,7 @@ primeros registros:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{class}\NormalTok{(data)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-[1] "data.frame"
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\KeywordTok{head}\NormalTok{(data)}
+\KeywordTok{head}\NormalTok{(data)[,}\DecValTok{1}\OperatorTok{:}\DecValTok{6}\NormalTok{]}
 \end{Highlighting}
 \end{Shaded}
 
@@ -254,62 +233,20 @@ primeros registros:
 4 84348301       11.42        20.38          77.58     386.1         0.14250
 5 84358402       20.29        14.34         135.10    1297.0         0.10030
 6   843786       12.45        15.70          82.57     477.1         0.12780
-  compactness_mean concavity_mean concave.points_mean symmetry_mean
-1          0.27760         0.3001             0.14710        0.2419
-2          0.07864         0.0869             0.07017        0.1812
-3          0.15990         0.1974             0.12790        0.2069
-4          0.28390         0.2414             0.10520        0.2597
-5          0.13280         0.1980             0.10430        0.1809
-6          0.17000         0.1578             0.08089        0.2087
-  fractal_dimension_mean radius_se texture_se perimeter_se area_se smoothness_se
-1                0.07871    1.0950     0.9053        8.589  153.40      0.006399
-2                0.05667    0.5435     0.7339        3.398   74.08      0.005225
-3                0.05999    0.7456     0.7869        4.585   94.03      0.006150
-4                0.09744    0.4956     1.1560        3.445   27.23      0.009110
-5                0.05883    0.7572     0.7813        5.438   94.44      0.011490
-6                0.07613    0.3345     0.8902        2.217   27.19      0.007510
-  compactness_se concavity_se concave.points_se symmetry_se fractal_dimension_se
-1        0.04904      0.05373           0.01587     0.03003             0.006193
-2        0.01308      0.01860           0.01340     0.01389             0.003532
-3        0.04006      0.03832           0.02058     0.02250             0.004571
-4        0.07458      0.05661           0.01867     0.05963             0.009208
-5        0.02461      0.05688           0.01885     0.01756             0.005115
-6        0.03345      0.03672           0.01137     0.02165             0.005082
-  radius_worst texture_worst perimeter_worst area_worst smoothness_worst
-1        25.38         17.33          184.60     2019.0           0.1622
-2        24.99         23.41          158.80     1956.0           0.1238
-3        23.57         25.53          152.50     1709.0           0.1444
-4        14.91         26.50           98.87      567.7           0.2098
-5        22.54         16.67          152.20     1575.0           0.1374
-6        15.47         23.75          103.40      741.6           0.1791
-  compactness_worst concavity_worst concave.points_worst symmetry_worst
-1            0.6656          0.7119               0.2654         0.4601
-2            0.1866          0.2416               0.1860         0.2750
-3            0.4245          0.4504               0.2430         0.3613
-4            0.8663          0.6869               0.2575         0.6638
-5            0.2050          0.4000               0.1625         0.2364
-6            0.5249          0.5355               0.1741         0.3985
-  fractal_dimension_worst diagnosis
-1                 0.11890         M
-2                 0.08902         M
-3                 0.08758         M
-4                 0.17300         M
-5                 0.07678         M
-6                 0.12440         M
 \end{verbatim}
 
 Nuestro conjunto de datos, \emph{BreastCancer1.csv}, esta formado por
 569 registros, con valores de 32 características.
 
-La primera variable es una variable numerica denominada \texttt{id}. Ya
+La primera variable es una variable numérica denominada \texttt{id}. Ya
 que es un simple identificador de cada paciente en los datos, no
-proporciona infromacion útil y necesitamos excluirlo del modelo. Como
+proporciona infromación útil y necesitamos excluirlo del modelo. Como
 está localizado en la primera columna, podemos excluirlo con el
-siguiente codigo, eliminando del data.frame la columna número 1.
+siguiente código, eliminando del \emph{data.frame} la columna número 1.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# drop the id feature}
+\CommentTok{# eliminamos la característica id}
 \NormalTok{data <-}\StringTok{ }\NormalTok{data[}\OperatorTok{-}\DecValTok{1}\NormalTok{]}
 \end{Highlighting}
 \end{Shaded}
@@ -322,7 +259,7 @@ NA son malignas. La clasificación existente según la diagnosis:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# table of diagnosis}
+\CommentTok{# tabla de diagnóstico, según la tipología }
 \KeywordTok{table}\NormalTok{(data}\OperatorTok{$}\NormalTok{diagnosis)}
 \end{Highlighting}
 \end{Shaded}
@@ -333,7 +270,7 @@ NA son malignas. La clasificación existente según la diagnosis:
 357 212 
 \end{verbatim}
 
-La mayoria de los clasificadores en \emph{Machine Learning} requiren que
+La mayoría de los clasificadores en \emph{Machine Learning} requiren que
 esta característica objetivo esté codificada como factor, por lo que
 recodificamos la variable, de tipo caracter, en tipo factor.
 
@@ -365,7 +302,7 @@ valores han sido etiquetados como `Benigno' y `Maligno'.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# table or proportions with more informative labels}
+\CommentTok{# tabla de la proporción de cada tipo}
 \KeywordTok{round}\NormalTok{(}\KeywordTok{prop.table}\NormalTok{(}\KeywordTok{table}\NormalTok{(data}\OperatorTok{$}\NormalTok{diagnosis)) }\OperatorTok{*}\StringTok{ }\DecValTok{100}\NormalTok{, }\DataTypeTok{digits =} \DecValTok{1}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -382,7 +319,7 @@ ejemplo:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# summarize three numeric features}
+\CommentTok{# incluimos tres características numéricas}
 \KeywordTok{kable}\NormalTok{(}\KeywordTok{summary}\NormalTok{(data[}\KeywordTok{c}\NormalTok{(}\StringTok{"radius_mean"}\NormalTok{, }\StringTok{"area_mean"}\NormalTok{, }\StringTok{"smoothness_mean"}\NormalTok{)]))}
 \end{Highlighting}
 \end{Shaded}
@@ -449,20 +386,28 @@ La estructura final es:
 \end{verbatim}
 
 Veamos como se comportan las características estudiadas según la
-clasificación de nuestra principal variable, disgnosis. Como veremos,
-para poder distinguir adecuadamente las variables, debemos cambiar el
-límite de los ejes, ya que los valores son muy diferentes según las
-variables:
+clasificación de nuestra principal variable, disgnosis. Realizamos para
+ello una exploración gráfica con un boxplot de las variables numéricas.
+Como veremos, se pueden observarlas diferencias en la escala de estas
+variables, y para poder distinguir adecuadamente las variables, debemos
+cambiar el límite de los ejes:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{boxplot}\NormalTok{(data,}\DataTypeTok{main=}\StringTok{'Datos sin normalizar'}\NormalTok{,}\DataTypeTok{col=}\KeywordTok{c}\NormalTok{(}\StringTok{'brown'}\NormalTok{, }\StringTok{'green'}\NormalTok{),}\DataTypeTok{cex.axis=}\FloatTok{0.7}\NormalTok{,}\DataTypeTok{subset=}\NormalTok{data}\OperatorTok{$}\NormalTok{diagnosis, }\DataTypeTok{ylim=}\KeywordTok{c}\NormalTok{(}\FloatTok{0.05}\NormalTok{,}\DecValTok{1000}\NormalTok{))}
+\KeywordTok{boxplot}\NormalTok{(data,}\DataTypeTok{main=}\StringTok{'Datos sin normalizar'}\NormalTok{,}\DataTypeTok{col=}\KeywordTok{c}\NormalTok{(}\StringTok{'lightgreen'}\NormalTok{, }\StringTok{'orange'}\NormalTok{),}\DataTypeTok{cex.axis=}\FloatTok{0.7}\NormalTok{,}
+        \DataTypeTok{subset=}\NormalTok{data}\OperatorTok{$}\NormalTok{diagnosis, }\DataTypeTok{ylim=}\KeywordTok{c}\NormalTok{(}\FloatTok{0.05}\NormalTok{,}\DecValTok{1000}\NormalTok{))}
 
-\KeywordTok{boxplot}\NormalTok{(data,}\DataTypeTok{main=}\StringTok{'Datos sin normalizar'}\NormalTok{,}\DataTypeTok{col=}\KeywordTok{c}\NormalTok{(}\StringTok{'brown'}\NormalTok{, }\StringTok{'green'}\NormalTok{),}\DataTypeTok{cex.axis=}\FloatTok{0.7}\NormalTok{,}\DataTypeTok{subset=}\NormalTok{data}\OperatorTok{$}\NormalTok{diagnosis, }\DataTypeTok{ylim=}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{,}\FloatTok{0.30}\NormalTok{))}
+\KeywordTok{boxplot}\NormalTok{(data,}\DataTypeTok{main=}\StringTok{'Datos sin normalizar'}\NormalTok{,}\DataTypeTok{col=}\KeywordTok{c}\NormalTok{(}\StringTok{'lightgreen'}\NormalTok{, }\StringTok{'orange'}\NormalTok{),}\DataTypeTok{cex.axis=}\FloatTok{0.7}\NormalTok{,}
+        \DataTypeTok{subset=}\NormalTok{data}\OperatorTok{$}\NormalTok{diagnosis, }\DataTypeTok{ylim=}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{,}\FloatTok{0.30}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-8-1} \includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-8-2} \end{center}
+
+Además se presenta el comportamiento de las primeras 12 variables del
+dataset en función del tipo de diagnóstico:
+
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-9-1} \end{center}
 
 Cada variable muestra diferencias en los resultados según pertenezcan a
 tejido sano o tumoral. Sin embargo, aunque normalmente el tejido sano
@@ -496,14 +441,14 @@ variabls aleatorias:
 \NormalTok{datasetN <-}\StringTok{ }\NormalTok{data[aleatN,aleatG]}
 
 \KeywordTok{par}\NormalTok{(}\DataTypeTok{mfrow=}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{))}
-\KeywordTok{boxplot}\NormalTok{(datasetN,}\DataTypeTok{cex.axis=}\FloatTok{0.6}\NormalTok{,}\DataTypeTok{ylab=}\StringTok{''}\NormalTok{,}\DataTypeTok{main=}\StringTok{"Tejido normal"}\NormalTok{,}\DataTypeTok{las=}\DecValTok{2}\NormalTok{)}
+\KeywordTok{boxplot}\NormalTok{(datasetN,}\DataTypeTok{cex.axis=}\FloatTok{0.6}\NormalTok{,}\DataTypeTok{ylab=}\StringTok{''}\NormalTok{,}\DataTypeTok{main=}\StringTok{"Tejido normal"}\NormalTok{,}\DataTypeTok{las=}\DecValTok{2}\NormalTok{, }\DataTypeTok{col=}\StringTok{"lightgreen"}\NormalTok{)}
 \KeywordTok{abline}\NormalTok{(}\DataTypeTok{h =} \DecValTok{500}\NormalTok{,}\DataTypeTok{col=}\StringTok{'red'}\NormalTok{)}
-\KeywordTok{boxplot}\NormalTok{(datasetT,}\DataTypeTok{cex.axis=}\FloatTok{0.6}\NormalTok{,}\DataTypeTok{ylab=}\StringTok{''}\NormalTok{, }\DataTypeTok{main=}\StringTok{"Tejido tumoral"}\NormalTok{, }\DataTypeTok{las=}\DecValTok{2}\NormalTok{)}
+\KeywordTok{boxplot}\NormalTok{(datasetT,}\DataTypeTok{cex.axis=}\FloatTok{0.6}\NormalTok{,}\DataTypeTok{ylab=}\StringTok{''}\NormalTok{, }\DataTypeTok{main=}\StringTok{"Tejido tumoral"}\NormalTok{, }\DataTypeTok{las=}\DecValTok{2}\NormalTok{, }\DataTypeTok{col =} \StringTok{"orange"}\NormalTok{)}
 \KeywordTok{abline}\NormalTok{(}\DataTypeTok{h =} \DecValTok{500}\NormalTok{,}\DataTypeTok{col=}\StringTok{'red'}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-9-1} \end{center}
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-10-1} \end{center}
 
 Por otro lado, podemos realizar una normalización de los datos, de forma
 que todos se encuentran entre 0 y 1 y nos permita una visualización más
@@ -511,7 +456,7 @@ sencilla y fácil de interpretar:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# Funcion de normalizacion}
+\CommentTok{# Función de normalización}
 \NormalTok{normalize <-}\StringTok{ }\ControlFlowTok{function}\NormalTok{(x) \{}
   \KeywordTok{return}\NormalTok{ ((x }\OperatorTok{-}\StringTok{ }\KeywordTok{min}\NormalTok{(x)) }\OperatorTok{/}\StringTok{ }\NormalTok{(}\KeywordTok{max}\NormalTok{(x) }\OperatorTok{-}\StringTok{ }\KeywordTok{min}\NormalTok{(x)))}
 \NormalTok{\}}
@@ -528,12 +473,13 @@ utilizaremos una de las funciones de R para automatizar el proceso.
 \CommentTok{# normalizamos los datos}
 \NormalTok{data.norm <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{lapply}\NormalTok{(data[,}\OperatorTok{-}\DecValTok{31}\NormalTok{], normalize))}
 \CommentTok{# Los graficamos}
-\KeywordTok{boxplot}\NormalTok{(data.norm,}\DataTypeTok{main=}\StringTok{'Datos normalizados'}\NormalTok{,}\DataTypeTok{col=}\KeywordTok{c}\NormalTok{(}\StringTok{'lightblue'}\NormalTok{),}\DataTypeTok{cex.axis=}\FloatTok{0.7}\NormalTok{,}\DataTypeTok{subset=}\NormalTok{data}\OperatorTok{$}\NormalTok{diagnosis)}
+\KeywordTok{boxplot}\NormalTok{(data.norm,}\DataTypeTok{main=}\StringTok{'Datos normalizados'}\NormalTok{,}\DataTypeTok{col=}\KeywordTok{c}\NormalTok{(}\StringTok{'lightblue'}\NormalTok{, }\StringTok{"orange"}\NormalTok{),}\DataTypeTok{cex.axis=}\FloatTok{0.7}\NormalTok{,}
+        \DataTypeTok{subset=}\NormalTok{data}\OperatorTok{$}\NormalTok{diagnosis)}
 \KeywordTok{abline}\NormalTok{(}\DataTypeTok{h=}\FloatTok{0.5}\NormalTok{,}\DataTypeTok{lwd=}\DecValTok{1}\NormalTok{, }\DataTypeTok{col=}\StringTok{"red"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-11-1} \end{center}
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-12-1} \end{center}
 
 \hypertarget{particiuxf3n-de-los-datos-en-trainingtest}{%
 \subsection{Partición de los datos en
@@ -550,8 +496,8 @@ dentro del análisis de cada modelo.
 \begin{Highlighting}[]
 \CommentTok{#fijamos la semilla para el generador pseudoaleatorio}
 \KeywordTok{set.seed}\NormalTok{(params}\OperatorTok{$}\NormalTok{seed.train) }
-
-\CommentTok{# creamos los grupos de entrenamiento (train) y prueba (test)}
+\CommentTok{# creamos los grupos de entrenamiento (datos.train) y prueba (datos.test) con la selección }
+\CommentTok{# aleatoria de los datos asignando el 67% a train y 33% a test (train).}
 \NormalTok{train<-}\KeywordTok{sample}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(data),}\KeywordTok{round}\NormalTok{(}\KeywordTok{nrow}\NormalTok{(data)}\OperatorTok{*}\NormalTok{params}\OperatorTok{$}\NormalTok{p.train,}\DecValTok{0}\NormalTok{))}
 \NormalTok{datos.train <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(data[train,])}
 \NormalTok{datos.test  <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(data[}\OperatorTok{-}\NormalTok{train,])}
@@ -608,27 +554,39 @@ clasificación}\label{aplicaciuxf3n-de-cada-uno-de-los-algoritmos-para-la-clasif
 datos}\label{transformaciuxf3n-de-los-datos}}
 
 Para aplicar el algoritmo de k-nearest necesitamos tener los datos
-normalizados. Este paso lo hemos realizado con el fin de graficar los
-datos de forma apropiada en el apartado anterior, por lo que usaremos el
-data frame \texttt{data.norm} creado en el apartado \emph{Exploración y
-preparación de los datos}.
+normalizados. Ya que se debe aplicar la misma selección de datos
+training y test en todos los algoritmos, empleamos la misma selección de
+datos anteriores (dentro del vector \emph{train}) pero sobre los datos
+normalizados y creamos de nuevo ambos grupos.
 
-Cuando construimos nuestros datos de entrenamiento y prueba, excluimos
-la variable objetivo, `diagnosis'. Para entrenar el modelo kNN,
-necesitaremos almacenar estas etiquetas de clase en vectores de
-factores, divididos en los conjuntos de datos de entrenamiento y prueba,
-además creamos de nuevo los grupos de entrenamiento y prueba con los
-datos normalizados:
+Por otro lado, cuando construimos nuestros datos de entrenamiento y
+prueba, excluimos la variable objetivo, `diagnosis'. Para entrenar el
+modelo kNN, necesitaremos ahora almacenar estas etiquetas de clase en
+vectores de factores, divididos en los conjuntos de datos de
+entrenamiento y prueba:
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{#fijamos la semilla para el generador pseudoaleatorio}
 \KeywordTok{set.seed}\NormalTok{(params}\OperatorTok{$}\NormalTok{seed.train) }
-
+\CommentTok{# train<-sample(1:nrow(data),round(nrow(data)*params$p.train,0)) # contiene nuestra }
+\CommentTok{# selección aleatoria de datos para entrenamiento con el 67% de los datos}
 \CommentTok{# creamos los grupos de entrenamiento (train) y prueba (test) con los datos normalizados}
-\NormalTok{train<-}\KeywordTok{sample}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(data),}\KeywordTok{round}\NormalTok{(}\KeywordTok{nrow}\NormalTok{(data)}\OperatorTok{*}\NormalTok{params}\OperatorTok{$}\NormalTok{p.train,}\DecValTok{0}\NormalTok{))}
-\NormalTok{datos.train.n <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(data.norm[train,])}
-\NormalTok{datos.test.n  <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(data.norm[}\OperatorTok{-}\NormalTok{train,])}
+\NormalTok{datos.train.n <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(data.norm[train,]) }\CommentTok{# 67% de los datos}
+\NormalTok{datos.test.n  <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(data.norm[}\OperatorTok{-}\NormalTok{train,]) }\CommentTok{# 33% de los datos}
+
+\KeywordTok{nrow}\NormalTok{(datos.train.n)}\OperatorTok{/}\KeywordTok{nrow}\NormalTok{(datos.test.n) }\CommentTok{# vemos que coincide con la calisifcación realizada }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 1.994737
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# para los datos sin normalizar. empleamos por tanto la misma selección de datos,}
+\CommentTok{# pero normalizados.}
 
 \CommentTok{# Creamos las etiquetas para ambos grupos}
 \NormalTok{datos.train.label <-}\StringTok{ }\NormalTok{data[train, }\DecValTok{31}\NormalTok{]}
@@ -639,7 +597,7 @@ datos normalizados:
 \hypertarget{entrenar-el-modelo}{%
 \subsubsection{Entrenar el modelo}\label{entrenar-el-modelo}}
 
-Para clasificar nuestras muestras, usamos la funcion \texttt{knn()} para
+Para clasificar nuestras muestras, usamos la función \texttt{knn()} para
 clasificar los datos del grupo test:
 
 \begin{Shaded}
@@ -666,7 +624,8 @@ función \texttt{CrossTable()} en el paquete \texttt{gmodels}:
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{library}\NormalTok{(gmodels)}
-\CommentTok{# Podemos crear una tabulación cruzada que indique el acuerdo entre los dos vectores. Especificando `prop.chisq = FALSO`}
+\CommentTok{# Podemos crear una tabulación cruzada que indique el acuerdo entre los dos vectores, }
+\CommentTok{# especificando `prop.chisq = FALSO`}
 \NormalTok{conf.mat <-}\StringTok{ }\KeywordTok{CrossTable}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ datos.test.label, }\DataTypeTok{y =}\NormalTok{ data.test.pred,}
            \DataTypeTok{prop.chisq =} \OtherTok{FALSE}\NormalTok{)}
 \end{Highlighting}
@@ -773,10 +732,10 @@ positivos pueden ocasionar estres al paciente o gastos innecesarios al
 hospital.
 
 Para mejorar el modelo vamos a realizar dos variaciones además de
-implementar el modelo con el paquete caret. Intentaremos dos variaciones
-simples en el clasificador anterior. Primero, un método que reescala las
-variables numéricas y en segundo lugar, intentaremos varios valores del
-parámetro \emph{k}.
+implementar el modelo con el paquete \texttt{caret}. Intentaremos dos
+variaciones simples en el clasificador anterior. Primero, un método que
+reescala las variables numéricas y en segundo lugar, intentaremos varios
+valores del parámetro \emph{k}.
 
 \hypertarget{posible-mejora-1-transformaciuxf3n---estandarizaciuxf3n-de-z}{%
 \paragraph{Posible mejora 1: Transformación - estandarización de
@@ -789,9 +748,9 @@ almacenamos el resultado en la variable\texttt{data.z}.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# use the scale() function to z-score standardize a data frame}
+\CommentTok{# empleamos la función scale() para estandarizar a z-score nuestro data frame}
 \NormalTok{data.z <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(}\KeywordTok{scale}\NormalTok{(data[}\OperatorTok{-}\DecValTok{31}\NormalTok{]))}
-\CommentTok{# comprobamos que se ha aplicado la transformacion}
+\CommentTok{# comprobamos que se ha aplicado la transformación}
 \KeywordTok{summary}\NormalTok{(data.z}\OperatorTok{$}\NormalTok{area_mean)}
 \end{Highlighting}
 \end{Shaded}
@@ -881,7 +840,10 @@ imprimimos una tabla resumen con los resultados obtenidosÑ
 \NormalTok{  data.test.pred.k <-}\StringTok{ }\KeywordTok{knn}\NormalTok{(}\DataTypeTok{train =}\NormalTok{ datos.train.n, }\DataTypeTok{test =}\NormalTok{ datos.test.n, }\DataTypeTok{cl =}\NormalTok{ datos.train.label, }\DataTypeTok{k=}\NormalTok{i)}
 \NormalTok{  cf.knn.k <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{(data.test.pred.k,datos.test.label,}\DataTypeTok{positive=}\StringTok{"Maligno"}\NormalTok{)}
   
-\NormalTok{  resum[j,}\DecValTok{2}\OperatorTok{:}\DecValTok{5}\NormalTok{] <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\KeywordTok{round}\NormalTok{(cf.knn.k}\OperatorTok{$}\NormalTok{overall[}\StringTok{"Accuracy"}\NormalTok{], }\DecValTok{3}\NormalTok{), }\KeywordTok{round}\NormalTok{(cf.knn.k}\OperatorTok{$}\NormalTok{overall[}\StringTok{"Kappa"}\NormalTok{], }\DecValTok{3}\NormalTok{), }\KeywordTok{round}\NormalTok{(cf.knn.k}\OperatorTok{$}\NormalTok{byClass[}\StringTok{"Sensitivity"}\NormalTok{], }\DecValTok{3}\NormalTok{), }\KeywordTok{round}\NormalTok{(cf.knn.k}\OperatorTok{$}\NormalTok{byClass[}\StringTok{"Specificity"}\NormalTok{], }\DecValTok{3}\NormalTok{))}
+\NormalTok{  resum[j,}\DecValTok{2}\OperatorTok{:}\DecValTok{5}\NormalTok{] <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\KeywordTok{round}\NormalTok{(cf.knn.k}\OperatorTok{$}\NormalTok{overall[}\StringTok{"Accuracy"}\NormalTok{], }\DecValTok{3}\NormalTok{), }\KeywordTok{round}\NormalTok{(cf.knn.k}\OperatorTok{$}\NormalTok{overall[}\StringTok{"Kappa"}\NormalTok{], }
+                                                                  \DecValTok{3}\NormalTok{), }
+                    \KeywordTok{round}\NormalTok{(cf.knn.k}\OperatorTok{$}\NormalTok{byClass[}\StringTok{"Sensitivity"}\NormalTok{], }\DecValTok{3}\NormalTok{), }
+                    \KeywordTok{round}\NormalTok{(cf.knn.k}\OperatorTok{$}\NormalTok{byClass[}\StringTok{"Specificity"}\NormalTok{], }\DecValTok{3}\NormalTok{))}
 \NormalTok{\}}
 \KeywordTok{print}\NormalTok{(resum)}
 \end{Highlighting}
@@ -1085,8 +1047,8 @@ para cada muestra de los datos de test:
 [190,] 2.146303e-167 1.000000e+00
 \end{verbatim}
 
-Con la información de las probabilidades de la clase positiva (1) se
-construye la curva ROC.
+Con la información de las probabilidades de la clase positiva
+(``Maligno'' o 2) se construye la curva ROC.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1095,13 +1057,13 @@ construye la curva ROC.
 \NormalTok{pred <-}\StringTok{ }\KeywordTok{prediction}\NormalTok{(}\DataTypeTok{predictions=}\NormalTok{ test.pred.nb3[,}\DecValTok{2}\NormalTok{], }\DataTypeTok{labels=}\NormalTok{datos.test.label)}
 \NormalTok{perf <-}\StringTok{ }\KeywordTok{performance}\NormalTok{(pred, }\DataTypeTok{measure=}\StringTok{"tpr"}\NormalTok{, }\DataTypeTok{x.measure=}\StringTok{"fpr"}\NormalTok{)}
 
-\KeywordTok{plot}\NormalTok{(perf, }\DataTypeTok{main=} \StringTok{"ROC curve"}\NormalTok{, }\DataTypeTok{col=} \StringTok{"blue"}\NormalTok{, }\DataTypeTok{lwd=}\DecValTok{3}\NormalTok{, }\DataTypeTok{colorize=}\OtherTok{TRUE}\NormalTok{)}
+\KeywordTok{plot}\NormalTok{(perf, }\DataTypeTok{main=} \StringTok{"ROC curve Laplace 0"}\NormalTok{, }\DataTypeTok{col=} \StringTok{"blue"}\NormalTok{, }\DataTypeTok{lwd=}\DecValTok{3}\NormalTok{, }\DataTypeTok{colorize=}\OtherTok{TRUE}\NormalTok{)}
 \KeywordTok{abline}\NormalTok{(}\DataTypeTok{a=}\DecValTok{0}\NormalTok{, }\DataTypeTok{b=} \DecValTok{1}\NormalTok{, }\DataTypeTok{lwd=} \DecValTok{2}\NormalTok{, }\DataTypeTok{lty =} \DecValTok{2}\NormalTok{)}
 \NormalTok{perf.auc <-}\StringTok{ }\KeywordTok{performance}\NormalTok{(pred, }\DataTypeTok{measure =}\StringTok{"auc"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-30-1} \end{center}
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-31-1} \end{center}
 
 El area bajo la curva es \textbf{0.996058}.
 
@@ -1135,7 +1097,7 @@ construye la curva ROC.
 \NormalTok{pred2 <-}\StringTok{ }\KeywordTok{prediction}\NormalTok{(}\DataTypeTok{predictions=}\NormalTok{ test.pred.nb4[,}\DecValTok{2}\NormalTok{], }\DataTypeTok{labels=}\NormalTok{datos.test.label)}
 \NormalTok{perf2 <-}\StringTok{ }\KeywordTok{performance}\NormalTok{(pred2, }\DataTypeTok{measure=}\StringTok{"tpr"}\NormalTok{, }\DataTypeTok{x.measure=}\StringTok{"fpr"}\NormalTok{)}
 
-\KeywordTok{plot}\NormalTok{(perf2, }\DataTypeTok{main=} \StringTok{"ROC curve"}\NormalTok{, }\DataTypeTok{col=} \StringTok{"blue"}\NormalTok{, }\DataTypeTok{lwd=}\DecValTok{3}\NormalTok{, }\DataTypeTok{colorize=}\OtherTok{TRUE}\NormalTok{)}
+\KeywordTok{plot}\NormalTok{(perf2, }\DataTypeTok{main=} \StringTok{"ROC curve Laplace 1"}\NormalTok{, }\DataTypeTok{col=} \StringTok{"blue"}\NormalTok{, }\DataTypeTok{lwd=}\DecValTok{3}\NormalTok{, }\DataTypeTok{colorize=}\OtherTok{TRUE}\NormalTok{)}
 \KeywordTok{abline}\NormalTok{(}\DataTypeTok{a=}\DecValTok{0}\NormalTok{, }\DataTypeTok{b=} \DecValTok{1}\NormalTok{, }\DataTypeTok{lwd=} \DecValTok{2}\NormalTok{, }\DataTypeTok{lty =} \DecValTok{2}\NormalTok{)}
 \NormalTok{perf2.auc <-}\StringTok{ }\KeywordTok{performance}\NormalTok{(pred2, }\DataTypeTok{measure =}\StringTok{"auc"}\NormalTok{)}
 
@@ -1147,7 +1109,7 @@ construye la curva ROC.
 [1] 0.9951304
 \end{verbatim}
 
-\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-32-1} \end{center}
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-33-1} \end{center}
 
 El area bajo la curva es \textbf{0.9951304} y con \texttt{laplace\ =\ 0}
 es \textbf{\texttt{unlist(perf.auc@y.values)}}. Como vemos no mejora la
@@ -1156,9 +1118,9 @@ predicción, por lo que no tiene sentido cambiar el argumento de 0 a 1.
 \hypertarget{artificial-neural-network}{%
 \subsection{Artificial Neural Network}\label{artificial-neural-network}}
 
-\hypertarget{transformacion-de-los-datos}{%
-\subsubsection{Transformacion de los
-datos}\label{transformacion-de-los-datos}}
+\hypertarget{transformaciuxf3n-de-los-datos-2}{%
+\subsubsection{Transformación de los
+datos}\label{transformaciuxf3n-de-los-datos-2}}
 
 Hay que normalizar las variables para que tomen valores entre 0 y 1, tal
 y como hemos realizado en la clasificación de k-nn.~Los datos
@@ -1207,8 +1169,7 @@ ahora las dos nuevas variables:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# create labels for training and test data}
-
+\CommentTok{# creamos las etiquetas para los grupos de training and test}
 \NormalTok{datos.train.nn <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(data.norm[train,])}
 \NormalTok{datos.test.nn  <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(data.norm[}\OperatorTok{-}\NormalTok{train,])}
 
@@ -1257,11 +1218,11 @@ clasificación.
 \KeywordTok{library}\NormalTok{(neuralnet)}
 \NormalTok{nn.model}\FloatTok{.1}\NormalTok{ <-}\StringTok{ }\KeywordTok{neuralnet}\NormalTok{(fmla, }\DataTypeTok{data =}\NormalTok{ datos.train.nn, }\DataTypeTok{hidden =} \DecValTok{1}\NormalTok{, }\DataTypeTok{linear.output =} \OtherTok{FALSE}\NormalTok{)}
 \CommentTok{# Visualizamos la topología de la red neuronal:}
-\KeywordTok{plot}\NormalTok{(nn.model}\FloatTok{.1}\NormalTok{, }\DataTypeTok{rep =} \StringTok{"best"}\NormalTok{)}
+\KeywordTok{plot}\NormalTok{(nn.model}\FloatTok{.1}\NormalTok{, }\DataTypeTok{rep =} \StringTok{"best"}\NormalTok{, }\DataTypeTok{main =} \StringTok{"ANN con un nodo"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-37-1} \end{center}
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-38-1} \end{center}
 
 \hypertarget{predicciuxf3n-y-evaluaciuxf3n-del-algoritmo-2}{%
 \subsubsection{Predicción y Evaluación del
@@ -1283,7 +1244,7 @@ obtenerla con el siguiente código:
 \NormalTok{\}}
 \NormalTok{idx1 <-}\StringTok{ }\KeywordTok{apply}\NormalTok{(nn.model.}\FloatTok{1.}\NormalTok{matrix, }\DecValTok{1}\NormalTok{, max.idx)}
 \NormalTok{prediction <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"Maligno"}\NormalTok{, }\StringTok{"Benigno"}\NormalTok{)[idx1]}
-\NormalTok{result <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction, data}\OperatorTok{$}\NormalTok{diagnosis[}\OperatorTok{-}\NormalTok{train])}
+\NormalTok{result <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction, data}\OperatorTok{$}\NormalTok{diagnosis[}\OperatorTok{-}\NormalTok{train])  }\CommentTok{# comparar con los datos test}
 
 \CommentTok{# Resultados}
 \KeywordTok{library}\NormalTok{(caret)}
@@ -1337,11 +1298,11 @@ rendimiento.
 \KeywordTok{set.seed}\NormalTok{(params}\OperatorTok{$}\NormalTok{seed.clsfier)  }\CommentTok{# garantiza los resultados reproducibles}
 \NormalTok{nn.model}\FloatTok{.3}\NormalTok{ <-}\StringTok{ }\KeywordTok{neuralnet}\NormalTok{(fmla, }\DataTypeTok{data =}\NormalTok{ datos.train.nn, }\DataTypeTok{hidden =} \DecValTok{3}\NormalTok{, }\DataTypeTok{linear.output =} \OtherTok{FALSE}\NormalTok{)}
 \CommentTok{# visualizamos la topología de la red}
-\KeywordTok{plot}\NormalTok{(nn.model}\FloatTok{.3}\NormalTok{, }\DataTypeTok{rep =} \StringTok{"best"}\NormalTok{)}
+\KeywordTok{plot}\NormalTok{(nn.model}\FloatTok{.3}\NormalTok{, }\DataTypeTok{rep =} \StringTok{"best"}\NormalTok{, }\DataTypeTok{main =} \StringTok{"ANN con tres nodos"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-39-1} \end{center}
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-40-1} \end{center}
 
 El resultado de la matriz de confusión con los datos de test es:
 
@@ -1351,7 +1312,7 @@ El resultado de la matriz de confusión con los datos de test es:
 
 \NormalTok{idx3 <-}\StringTok{ }\KeywordTok{apply}\NormalTok{(nn.model.}\FloatTok{3.}\NormalTok{matrix, }\DecValTok{1}\NormalTok{, max.idx)}
 \NormalTok{prediction3 <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"Maligno"}\NormalTok{, }\StringTok{"Benigno"}\NormalTok{)[idx3]}
-\NormalTok{result}\FloatTok{.3}\NormalTok{ <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction3, data}\OperatorTok{$}\NormalTok{diagnosis[}\OperatorTok{-}\NormalTok{train])}
+\NormalTok{result}\FloatTok{.3}\NormalTok{ <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction3, data}\OperatorTok{$}\NormalTok{diagnosis[}\OperatorTok{-}\NormalTok{train])  }\CommentTok{# comparar con los datos test}
 
 \CommentTok{# Resultados}
 \NormalTok{(cmatrix3 <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{(result}\FloatTok{.3}\NormalTok{, }\DataTypeTok{positive =} \StringTok{"Maligno"}\NormalTok{))}
@@ -1406,18 +1367,18 @@ Veamos como responde el modelo con los datos de test y train:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# modelo Train/test without repetition}
+\CommentTok{# modelo Train/test sin repetición}
 \KeywordTok{library}\NormalTok{(caret)}
 \KeywordTok{library}\NormalTok{(NeuralNetTools)}
 \NormalTok{model.nnet <-}\StringTok{ }\KeywordTok{train}\NormalTok{(diagnosis }\OperatorTok{~}\StringTok{ }\NormalTok{., datos.train, }\DataTypeTok{method=}\StringTok{'nnet'}\NormalTok{, }
                \DataTypeTok{trControl=} \KeywordTok{trainControl}\NormalTok{(}\DataTypeTok{method=}\StringTok{'none'}\NormalTok{), }
-              \CommentTok{# preProcess = "range",}
+               \DataTypeTok{preProcess =} \StringTok{"range"}\NormalTok{, }\CommentTok{# probamos con un preproceso de los datos}
                \DataTypeTok{tuneGrid=} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{tuneLength=}\DecValTok{1}\NormalTok{ ,}\DataTypeTok{trace =} \OtherTok{FALSE}\NormalTok{) }\CommentTok{#}
 
-\KeywordTok{plotnet}\NormalTok{(model.nnet)}
+\KeywordTok{plotnet}\NormalTok{(model.nnet, }\DataTypeTok{main=}\StringTok{"modelo `nnet` con caret"}\NormalTok{)}
 \CommentTok{#summary(model.nnet)}
-\NormalTok{prediction.nnet <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.nnet, datos.test)               }\CommentTok{# predict}
-\NormalTok{result.caret1 <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.nnet, datos.test}\OperatorTok{$}\NormalTok{diagnosis)       }\CommentTok{# compare}
+\NormalTok{prediction.nnet <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.nnet, datos.test)         }\CommentTok{# predecir los resultados}
+\NormalTok{result.caret1 <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.nnet, datos.test}\OperatorTok{$}\NormalTok{diagnosis) }\CommentTok{# comparar con los datos test}
 \NormalTok{result.caret1}
 \end{Highlighting}
 \end{Shaded}
@@ -1425,26 +1386,26 @@ Veamos como responde el modelo con los datos de test y train:
 \begin{verbatim}
                
 prediction.nnet Benigno Maligno
-        Benigno     115      75
-        Maligno       0       0
+        Benigno     108       6
+        Maligno       7      69
 \end{verbatim}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# predict también puede devolver la probabilidad para cada clase:}
+\CommentTok{# la función predict también puede devolver la probabilidad para cada clase:}
 \NormalTok{prediction.nnet1 <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.nnet, datos.test, }\DataTypeTok{type=}\StringTok{"prob"}\NormalTok{)  }
 \KeywordTok{head}\NormalTok{(prediction.nnet1)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-     Benigno   Maligno
-2  0.6385224 0.3614776
-4  0.6385224 0.3614776
-5  0.6385224 0.3614776
-9  0.6385224 0.3614776
-11 0.6385224 0.3614776
-19 0.6385224 0.3614776
+   Benigno Maligno
+2        0       1
+4        0       1
+5        0       1
+9        0       1
+11       0       1
+19       0       1
 \end{verbatim}
 
 \begin{Shaded}
@@ -1459,36 +1420,36 @@ Confusion Matrix and Statistics
 
                
 prediction.nnet Benigno Maligno
-        Benigno     115      75
-        Maligno       0       0
+        Benigno     108       6
+        Maligno       7      69
                                           
-               Accuracy : 0.6053          
-                 95% CI : (0.5319, 0.6753)
+               Accuracy : 0.9316          
+                 95% CI : (0.8858, 0.9631)
     No Information Rate : 0.6053          
-    P-Value [Acc > NIR] : 0.5316          
+    P-Value [Acc > NIR] : <2e-16          
                                           
-                  Kappa : 0               
+                  Kappa : 0.8571          
                                           
- Mcnemar's Test P-Value : <2e-16          
+ Mcnemar's Test P-Value : 1               
                                           
-            Sensitivity : 0.0000          
-            Specificity : 1.0000          
-         Pos Pred Value :    NaN          
-         Neg Pred Value : 0.6053          
+            Sensitivity : 0.9200          
+            Specificity : 0.9391          
+         Pos Pred Value : 0.9079          
+         Neg Pred Value : 0.9474          
              Prevalence : 0.3947          
-         Detection Rate : 0.0000          
-   Detection Prevalence : 0.0000          
-      Balanced Accuracy : 0.5000          
+         Detection Rate : 0.3632          
+   Detection Prevalence : 0.4000          
+      Balanced Accuracy : 0.9296          
                                           
        'Positive' Class : Maligno         
                                           
 \end{verbatim}
 
-\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-41-1} \end{center}
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-42-1} \end{center}
 
-El modelo empleando caret con categoria positiva `Maligno' obtiene una
-precision de 0.605 y una sensitividad y especificidad de 0 y 1
-respectivamente.
+El modelo empleando \texttt{caret} con categoria positiva `Maligno'
+obtiene una precision de 0.932 y una sensitividad y especificidad de
+0.92 y 0.939 respectivamente.
 
 Empleamos ahora \textbf{5-fold crossvalidation} para tratar de mejorar
 la clasificación:
@@ -1502,8 +1463,8 @@ la clasificación:
 
 \KeywordTok{plotnet}\NormalTok{(model.nnet}\FloatTok{.2}\NormalTok{, }\DataTypeTok{alpha=}\FloatTok{0.6}\NormalTok{)}
 \CommentTok{#summary(model.nnet.2)}
-\NormalTok{prediction.nnet2 <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.nnet}\FloatTok{.2}\NormalTok{, datos.test)               }\CommentTok{# predict}
-\NormalTok{result.caret2 <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.nnet2, datos.test}\OperatorTok{$}\NormalTok{diagnosis)      }\CommentTok{# compare}
+\NormalTok{prediction.nnet2 <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.nnet}\FloatTok{.2}\NormalTok{, datos.test)           }\CommentTok{# predecir los resultados}
+\NormalTok{result.caret2 <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.nnet2, datos.test}\OperatorTok{$}\NormalTok{diagnosis)  }\CommentTok{# comparar con los datos test}
 \NormalTok{result.caret2}
 \end{Highlighting}
 \end{Shaded}
@@ -1569,21 +1530,21 @@ prediction.nnet2 Benigno Maligno
                                           
 \end{verbatim}
 
-\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-42-1} \end{center}
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-43-1} \end{center}
 
-El modelo empleando caret con 5-fold crossvalidation obtiene una
-precision de 0.921 y una sensitividad y especificidad de 0.907 y 0.93
-respectivamente.
+El modelo empleando \texttt{caret} con 5-fold crossvalidation obtiene
+una precision de 0.921 y una sensitividad y especificidad de 0.907 y
+0.93 respectivamente.
 
-Como vemos con el paquete caret obtenemos los mejores valores si no
-realizamos la 5-fold crossvalidation.
+Como vemos con el paquete \texttt{caret} obtenemos los mejores valores
+si no realizamos la 5-fold crossvalidation.
 
 \hypertarget{support-vector-machine}{%
 \subsection{Support Vector Machine}\label{support-vector-machine}}
 
-\hypertarget{transformacion-de-los-datos-1}{%
-\subsubsection{Transformacion de los
-datos}\label{transformacion-de-los-datos-1}}
+\hypertarget{transformaciuxf3n-de-los-datos-3}{%
+\subsubsection{Transformación de los
+datos}\label{transformaciuxf3n-de-los-datos-3}}
 
 El SVM no requiere realizar transformaciones normalizantes de los datos.
 
@@ -1595,7 +1556,7 @@ cross validation o bootstrap, que emplearemos después.
 \hypertarget{entrenar-el-modelo-3}{%
 \subsubsection{Entrenar el modelo}\label{entrenar-el-modelo-3}}
 
-El algoritmo de SVM que se usa es la funcion \texttt{ksvm()} del paquete
+El algoritmo de SVM que se usa es la función \texttt{ksvm()} del paquete
 \emph{kernlab}. Se construye el modelo más sencillo, el lineal, usando
 como kernel el valor \texttt{vanilladot}:
 
@@ -1632,7 +1593,7 @@ Objective Function Value : -11.728
 Training error : 0.010554 
 \end{verbatim}
 
-Se puede observar que la funcion lineal no tiene parametros adicionales
+Se puede observar que la función lineal no tiene parametros adicionales
 (`hiperparametros') al de coste.
 
 \hypertarget{predicciuxf3n-y-evaluaciuxf3n-del-algoritmo.}{%
@@ -1653,7 +1614,7 @@ Se obtiene la matriz de confusión, usando la función
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{#Modelo lineal}
+\CommentTok{# Modelo lineal}
 \NormalTok{res.svm <-}\StringTok{ }\KeywordTok{table}\NormalTok{(modLineal.pred, datos.test}\OperatorTok{$}\NormalTok{diagnosis)}
 \NormalTok{(cmatrixSVM <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{(res.svm, }\DataTypeTok{positive=}\StringTok{"Maligno"}\NormalTok{))}
 \end{Highlighting}
@@ -1689,7 +1650,7 @@ modLineal.pred Benigno Maligno
                                           
 \end{verbatim}
 
-El modelo de SVM lineal con categoria positiva `tumor' obtiene una
+El modelo de SVM lineal con categoria positiva `Maligno' obtiene una
 precisión de 0.937 y una sensitividad y especificidad de 0.88 y 0.974
 respectivamente.
 
@@ -1704,7 +1665,7 @@ tratar de mejorar el rendimiento:
 \begin{Highlighting}[]
 \KeywordTok{set.seed}\NormalTok{(params}\OperatorTok{$}\NormalTok{seed.clsfier)}
 \NormalTok{modeloGauss <-}\StringTok{ }\KeywordTok{ksvm}\NormalTok{(diagnosis }\OperatorTok{~}\StringTok{ }\NormalTok{., }\DataTypeTok{data =}\NormalTok{ datos.train, }\DataTypeTok{kernel =} \StringTok{"rbfdot"}\NormalTok{)}
-\CommentTok{# Prediccion}
+\CommentTok{# Predicción}
 \NormalTok{modeloGauss.pred <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(modeloGauss, datos.test)}
 \end{Highlighting}
 \end{Shaded}
@@ -1714,7 +1675,7 @@ El resultado de la matriz de confusión con los datos de test es:
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{res.svm.gaus <-}\StringTok{ }\KeywordTok{table}\NormalTok{(modeloGauss.pred, datos.test}\OperatorTok{$}\NormalTok{diagnosis)}
-\CommentTok{# Results}
+\CommentTok{# Resultados}
 \KeywordTok{library}\NormalTok{(caret)}
 \NormalTok{(cmatrixSVM2 <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{(res.svm.gaus, }\DataTypeTok{positive =} \StringTok{"Maligno"}\NormalTok{))}
 \end{Highlighting}
@@ -1756,21 +1717,25 @@ respectivamente. Vemos que el modelo obtenido con SVM gaussiano tiene
 una mayor precision.
 
 \hypertarget{paquete-caret}{%
-\subsubsection{Paquete caret}\label{paquete-caret}}
+\subsubsection{\texorpdfstring{Paquete
+\emph{caret}}{Paquete caret}}\label{paquete-caret}}
 
 Se construye un nuevo modelo con el objetivo de comprobar si la
-implementación del paquete \textbf{caret} produce diferencias. Se evalúa
+implementación del paquete \texttt{caret} produce diferencias. Se evalúa
 el rendimiento con la partición train/test y 5-fold cross validation en
 el modelo lineal y bootstrap con el modelo radial.
 
-Para crear la partición de los datos en training/test podemos emplear la
-función \texttt{createDataPartition} del paquete \textbf{caret}, aunque
-también podemos emplear los datos creados en el apartado 3.3.
+Para crear la partición de los datos en training/test tenemos la
+posibilidad de emplear la función \texttt{createDataPartition} del
+paquete \texttt{caret}. Como curiosidad veamos que ocurre con los
+resultados, pero posteriormente emplearemos el mismo set de datos de
+training/test creados en el apartado 3.3, para poder comprar los
+resultados.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{library}\NormalTok{(caret)}
-\CommentTok{#Particion de datos}
+\CommentTok{# Partición de datos}
 \KeywordTok{set.seed}\NormalTok{(params}\OperatorTok{$}\NormalTok{seed.train)}
 \CommentTok{# We wish 75% for the trainset }
 \NormalTok{inTrain <-}\StringTok{ }\KeywordTok{createDataPartition}\NormalTok{(}\DataTypeTok{y=}\NormalTok{data}\OperatorTok{$}\NormalTok{diagnosis, }\DataTypeTok{p=}\NormalTok{params}\OperatorTok{$}\NormalTok{p.train, }\DataTypeTok{list=}\OtherTok{FALSE}\NormalTok{)}
@@ -1787,18 +1752,18 @@ también podemos emplear los datos creados en el apartado 3.3.
 \end{verbatim}
 
 Entrenamos el modelo con los datos de train y test creados por el
-paquete caret:
+paquete \texttt{caret}:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# modelo solo de Train sin repeticion}
+\CommentTok{# modelo sólo de Train sin repetición}
 \KeywordTok{set.seed}\NormalTok{(params}\OperatorTok{$}\NormalTok{seed.otro)}
 \NormalTok{model.svm.caret <-}\StringTok{ }\KeywordTok{train}\NormalTok{(diagnosis }\OperatorTok{~}\StringTok{ }\NormalTok{., train.set, }\DataTypeTok{method=}\StringTok{'svmLinear'}\NormalTok{, }
                \DataTypeTok{trControl=} \KeywordTok{trainControl}\NormalTok{(}\DataTypeTok{method=}\StringTok{'none'}\NormalTok{), }
                 \DataTypeTok{tuneGrid=} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{trace =} \OtherTok{FALSE}\NormalTok{) }\CommentTok{#}
 
-\NormalTok{prediction.svm.caret <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.svm.caret, test.set)         }\CommentTok{# predict}
-\NormalTok{res.svm.caret <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.svm.caret, test.set}\OperatorTok{$}\NormalTok{diagnosis)    }\CommentTok{# compare}
+\NormalTok{prediction.svm.caret <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.svm.caret, test.set)         }\CommentTok{# predecir los resultados}
+\NormalTok{res.svm.caret <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.svm.caret, test.set}\OperatorTok{$}\NormalTok{diagnosis)   }\CommentTok{# comparar con los datos test}
 
 \KeywordTok{confusionMatrix}\NormalTok{(res.svm.caret, }\DataTypeTok{positive=}\StringTok{"Maligno"}\NormalTok{)   }
 \end{Highlighting}
@@ -1835,19 +1800,19 @@ prediction.svm.caret Benigno Maligno
 \end{verbatim}
 
 Ahora se repite el modelo pero con los mismos datos de training/test
-usados en la funcion \texttt{ksvm} con kernel \texttt{vanilladot} del
-paquete kernlab, para comprobar las variaciones:
+usados en la función \texttt{ksvm} con kernel \texttt{vanilladot} del
+paquete \emph{kernlab}, para comprobar las variaciones:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# modelo solo de Train sin repeticion}
+\CommentTok{# modelo sin repetición}
 \KeywordTok{set.seed}\NormalTok{(params}\OperatorTok{$}\NormalTok{seed.otro)}
 \NormalTok{model.svm.caret2 <-}\StringTok{ }\KeywordTok{train}\NormalTok{(diagnosis }\OperatorTok{~}\StringTok{ }\NormalTok{., datos.train, }\DataTypeTok{method=}\StringTok{'svmLinear'}\NormalTok{, }
                \DataTypeTok{trControl=} \KeywordTok{trainControl}\NormalTok{(}\DataTypeTok{method=}\StringTok{'none'}\NormalTok{), }
                 \DataTypeTok{tuneGrid=} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{trace =} \OtherTok{FALSE}\NormalTok{)}
 
-\NormalTok{prediction.svm.caret2 <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.svm.caret2, datos.test)          }\CommentTok{# predict}
-\NormalTok{res.svm.caret2 <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.svm.caret2, datos.test}\OperatorTok{$}\NormalTok{diagnosis)    }\CommentTok{# compare}
+\NormalTok{prediction.svm.caret2 <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.svm.caret2, datos.test)          }\CommentTok{# predecir los resultados}
+\NormalTok{res.svm.caret2 <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.svm.caret2, datos.test}\OperatorTok{$}\NormalTok{diagnosis)    }\CommentTok{# comparar con los datos test}
 
 \NormalTok{svm.caret.matrix <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{(res.svm.caret2, }\DataTypeTok{positive=}\StringTok{"Maligno"}\NormalTok{)   }
 \end{Highlighting}
@@ -1869,23 +1834,23 @@ la clasificación:
 \begin{Highlighting}[]
 \CommentTok{# modelo 5-crossvalidation }
 \KeywordTok{set.seed}\NormalTok{(params}\OperatorTok{$}\NormalTok{seed.clsfier)}
-\NormalTok{model.svm.fold <-}\StringTok{ }\KeywordTok{train}\NormalTok{(diagnosis }\OperatorTok{~}\StringTok{ }\NormalTok{., train.set, }\DataTypeTok{method=}\StringTok{'svmLinear'}\NormalTok{, }
+\NormalTok{model.svm.fold <-}\StringTok{ }\KeywordTok{train}\NormalTok{(diagnosis }\OperatorTok{~}\StringTok{ }\NormalTok{., datos.train, }\DataTypeTok{method=}\StringTok{'svmLinear'}\NormalTok{, }
                \DataTypeTok{trControl=} \KeywordTok{trainControl}\NormalTok{(}\DataTypeTok{method=}\StringTok{'cv'}\NormalTok{, }\DataTypeTok{number=}\DecValTok{5}\NormalTok{), }
                 \DataTypeTok{tuneGrid=} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{trace =} \OtherTok{FALSE}\NormalTok{)}
 
-\NormalTok{prediction.fold <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.svm.fold, test.set)       }\CommentTok{# predict}
-\NormalTok{res.fold <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.fold, test.set}\OperatorTok{$}\NormalTok{diagnosis)         }\CommentTok{# compare}
+\NormalTok{prediction.fold <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.svm.fold, datos.test)      }\CommentTok{# predecir los resultados}
+\NormalTok{res.fold <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.fold, datos.test}\OperatorTok{$}\NormalTok{diagnosis)    }\CommentTok{# comparar con los datos test}
 
 \NormalTok{svm.caret.matrix5 <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{(res.fold, }\DataTypeTok{positive=}\StringTok{"Maligno"}\NormalTok{)   }
 \end{Highlighting}
 \end{Shaded}
 
 El modelo de SVM lineal con categoria positiva `Maligno' obtiene una
-precisión de 0.958 y una sensitividad y especificidad de 0.971 y 0.95
+precisión de 0.937 y una sensitividad y especificidad de 0.88 y 0.974
 respectivamente.
 
-Obtenemos datos similares empleando el paquete caret pero sin 5-fold
-crossvalidation.
+Obtenemos datos similares empleando el paquete \texttt{caret} pero sin
+5-fold crossvalidation.
 
 Por último empleamos bootstrap con el modelo SVM \texttt{svmRadial}:
 
@@ -1894,13 +1859,12 @@ Por último empleamos bootstrap con el modelo SVM \texttt{svmRadial}:
 \CommentTok{# Por defecto es Bootstrap, con 25 repeticiones para 3 posibles decay}
 \CommentTok{# y 3 posibles sizes}
 \KeywordTok{set.seed}\NormalTok{(params}\OperatorTok{$}\NormalTok{seed.clsfier)}
-\NormalTok{model.svm.caret3 <-}\StringTok{ }\KeywordTok{train}\NormalTok{(diagnosis }\OperatorTok{~}\StringTok{ }\NormalTok{., datos.train, }\DataTypeTok{method=}\StringTok{'svmRadial'}\NormalTok{, }\DataTypeTok{trace =} \OtherTok{FALSE}\NormalTok{) }\CommentTok{# train}
-\CommentTok{# we also add parameter 'preProc = c("center", "scale"))' at train() for centering and scaling the data}
+\NormalTok{model.svm.caret3 <-}\StringTok{ }\KeywordTok{train}\NormalTok{(diagnosis }\OperatorTok{~}\StringTok{ }\NormalTok{., datos.train, }\DataTypeTok{method=}\StringTok{'svmRadial'}\NormalTok{, }\DataTypeTok{trace =} \OtherTok{FALSE}\NormalTok{)}
 
-\NormalTok{prediction.boots <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.svm.caret3, datos.test)      }\CommentTok{# predict}
-\NormalTok{res.svm.boots <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.boots, datos.test}\OperatorTok{$}\NormalTok{diagnosis)        }\CommentTok{# compare}
+\NormalTok{prediction.boots <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(model.svm.caret3, datos.test)      }\CommentTok{# predecir los resultados}
+\NormalTok{res.svm.boots <-}\StringTok{ }\KeywordTok{table}\NormalTok{(prediction.boots, datos.test}\OperatorTok{$}\NormalTok{diagnosis) }\CommentTok{# comparar con los datos test}
 
-\NormalTok{res.svm.boots.matrix <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{(res.svm.boots, }\DataTypeTok{positive=}\StringTok{"Maligno"}\NormalTok{)    }\CommentTok{# compare}
+\NormalTok{res.svm.boots.matrix <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{(res.svm.boots, }\DataTypeTok{positive=}\StringTok{"Maligno"}\NormalTok{)}
 \NormalTok{res.svm.boots.matrix}
 \end{Highlighting}
 \end{Shaded}
@@ -1942,9 +1906,9 @@ respectivamente.
 \hypertarget{uxe1rbol-de-decisiuxf3n}{%
 \subsection{Árbol de Decisión}\label{uxe1rbol-de-decisiuxf3n}}
 
-\hypertarget{transformaciuxf3n-de-los-datos-2}{%
+\hypertarget{transformaciuxf3n-de-los-datos-4}{%
 \subsubsection{Transformación de los
-datos}\label{transformaciuxf3n-de-los-datos-2}}
+datos}\label{transformaciuxf3n-de-los-datos-4}}
 
 El algorítmo de árboles de decisión no requiere realizar
 transformaciones normalizantes de los datos, empleamos los datos de
@@ -1955,7 +1919,7 @@ entrenamiento y test creados en el partado 3.3.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{#fijar la semilla para el clasificador}
+\CommentTok{# fijamos la semilla para el clasificador}
 \KeywordTok{library}\NormalTok{(C50)}
 \KeywordTok{set.seed}\NormalTok{(params}\OperatorTok{$}\NormalTok{seed.clsfier)}
 \NormalTok{data.model.ab<-}\StringTok{ }\KeywordTok{C5.0}\NormalTok{(datos.train[}\OperatorTok{-}\DecValTok{31}\NormalTok{], datos.train}\OperatorTok{$}\NormalTok{diagnosis)}
@@ -1993,7 +1957,7 @@ Call:
 C5.0.default(x = datos.train[-31], y = datos.train$diagnosis)
 
 
-C5.0 [Release 2.07 GPL Edition]     Tue Jun 09 01:36:11 2020
+C5.0 [Release 2.07 GPL Edition]     Tue Jun 09 14:01:47 2020
 -------------------------------
 
 Class specified by attribute `outcome'
@@ -2060,7 +2024,7 @@ valores se clasificaron erróneamente como Malignos (falsos negativos).
 \end{Highlighting}
 \end{Shaded}
 
-\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-55-1} \end{center}
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-56-1} \end{center}
 
 \hypertarget{predicciuxf3n-y-evaluaciuxf3n-del-algoritmo-3}{%
 \subsubsection{Predicción y Evaluación del
@@ -2131,7 +2095,7 @@ En resumen:
 
 \begin{table}
 
-\caption{\label{tab:unnamed-chunk-58}ANÁLISIS USANDO ÁRBOLES DE CLASIFICACIÓN}
+\caption{\label{tab:unnamed-chunk-59}ANÁLISIS USANDO ÁRBOLES DE CLASIFICACIÓN}
 \centering
 \begin{tabular}[t]{l|c|c|c}
 \hline
@@ -2163,7 +2127,7 @@ aproximadamente un 25 por ciento:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{#fijar la semilla para el clasificador}
+\CommentTok{# fijamos la semilla para el clasificador}
 \KeywordTok{set.seed}\NormalTok{(params}\OperatorTok{$}\NormalTok{seed.clsfier)}
 \NormalTok{model.boost10 <-}\StringTok{ }\KeywordTok{C5.0}\NormalTok{(datos.train[}\OperatorTok{-}\DecValTok{31}\NormalTok{], datos.train}\OperatorTok{$}\NormalTok{diagnosis, }\DataTypeTok{trials =} \DecValTok{10}\NormalTok{)}
 \KeywordTok{summary}\NormalTok{(model.boost10)}
@@ -2176,7 +2140,7 @@ Call:
 C5.0.default(x = datos.train[-31], y = datos.train$diagnosis, trials = 10)
 
 
-C5.0 [Release 2.07 GPL Edition]     Tue Jun 09 01:36:11 2020
+C5.0 [Release 2.07 GPL Edition]     Tue Jun 09 14:01:48 2020
 -------------------------------
 
 Class specified by attribute `outcome'
@@ -2426,10 +2390,11 @@ Accuracy es de 0.932\\
 Kappa es de 0.856
 
 \hypertarget{paquete-caret-1}{%
-\subsubsection{Paquete caret}\label{paquete-caret-1}}
+\subsubsection{\texorpdfstring{Paquete
+\emph{caret}}{Paquete caret}}\label{paquete-caret-1}}
 
 Empleamos los mismos grupos de train y test que hemos empleado en el
-análisis anterior. Para ajustar el modelo se emplea la funcion
+análisis anterior. Para ajustar el modelo se emplea la función
 \texttt{train} y empleamos 5-fold crossvalidation para entrenarlo:
 
 \begin{Shaded}
@@ -2444,7 +2409,7 @@ análisis anterior. Para ajustar el modelo se emplea la funcion
 \CommentTok{## trials -> número de iteraciones boosting }
 \NormalTok{grid_C50 <-}\StringTok{ }\KeywordTok{expand.grid}\NormalTok{(}\DataTypeTok{model=}\StringTok{"tree"}\NormalTok{, }\DataTypeTok{trials=}\KeywordTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{,}\DecValTok{10}\NormalTok{,}\DecValTok{20}\NormalTok{,}\DecValTok{30}\NormalTok{),}\DataTypeTok{winnow=}\StringTok{"FALSE"}\NormalTok{)}
 
-\CommentTok{# fijar la semilla para el clasificador}
+\CommentTok{# fijamos la semilla para el clasificador}
 \KeywordTok{set.seed}\NormalTok{(params}\OperatorTok{$}\NormalTok{seed.clsfier)}
 \CommentTok{## trace <- FALSE para suprimir las iteraciones de entrenamiento}
 \NormalTok{modeloC5}\FloatTok{.0}\NormalTok{     <-}\StringTok{ }\KeywordTok{train}\NormalTok{ (diagnosis }\OperatorTok{~}\StringTok{ }\NormalTok{.,}
@@ -2492,7 +2457,7 @@ para la evaliuación del rendimiento creamos la matriz de resultados:
 \CommentTok{# Predicción de Clases}
 \NormalTok{prd.c50 <-}\StringTok{ }\KeywordTok{predict}\NormalTok{ ( modeloC5}\FloatTok{.0}\NormalTok{, }\DataTypeTok{newdata =}\NormalTok{ datos.test)}
 \CommentTok{# Matriz de Confusión}
-\NormalTok{(cf.c50 <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{( }\DataTypeTok{data=}\NormalTok{prd.c50, datos.test}\OperatorTok{$}\NormalTok{diagnosis))}
+\NormalTok{(cf.c50 <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{( }\DataTypeTok{data=}\NormalTok{prd.c50, datos.test}\OperatorTok{$}\NormalTok{diagnosis, }\DataTypeTok{positive=}\StringTok{"Maligno"}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2513,20 +2478,21 @@ Prediction Benigno Maligno
                                          
  Mcnemar's Test P-Value : 0.1824         
                                          
-            Sensitivity : 0.9826         
-            Specificity : 0.9067         
-         Pos Pred Value : 0.9417         
-         Neg Pred Value : 0.9714         
-             Prevalence : 0.6053         
-         Detection Rate : 0.5947         
-   Detection Prevalence : 0.6316         
+            Sensitivity : 0.9067         
+            Specificity : 0.9826         
+         Pos Pred Value : 0.9714         
+         Neg Pred Value : 0.9417         
+             Prevalence : 0.3947         
+         Detection Rate : 0.3579         
+   Detection Prevalence : 0.3684         
       Balanced Accuracy : 0.9446         
                                          
-       'Positive' Class : Benigno        
+       'Positive' Class : Maligno        
                                          
 \end{verbatim}
 
-La precisión ha aumentado respecto al modelo anterior sin caret.
+La precisión ha aumentado respecto al modelo anterior sin
+\texttt{caret}.
 
 Accuracy es de 0.953\\
 Kappa es de 0.9.
@@ -2534,9 +2500,9 @@ Kappa es de 0.9.
 \hypertarget{random-forest}{%
 \subsection{Random Forest}\label{random-forest}}
 
-\hypertarget{transformacion-de-los-datos-2}{%
-\subsubsection{Transformacion de los
-datos}\label{transformacion-de-los-datos-2}}
+\hypertarget{transformaciuxf3n-de-los-datos-5}{%
+\subsubsection{Transformación de los
+datos}\label{transformaciuxf3n-de-los-datos-5}}
 
 El algorítmo de \emph{Random Forest} no requiere realizar
 transformaciones normalizantes de los datos, empleamos los datos de
@@ -2590,11 +2556,11 @@ El resultado indica que \emph{Random Forest} incluyó 500 árboles y probó
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{plot}\NormalTok{(randomf)}
+\KeywordTok{plot}\NormalTok{(randomf, }\DataTypeTok{main=}\StringTok{"modelo Random Forest"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-64-1} \end{center}
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-65-1} \end{center}
 
 Donde la línea roja representa el error cometido al intentar predecir el
 diagnóstico, y la línea verde es el error en la predicción
@@ -2619,11 +2585,11 @@ compactness_mean        1.4580878
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{varImpPlot}\NormalTok{(randomf)}
+\KeywordTok{varImpPlot}\NormalTok{(randomf, }\DataTypeTok{main=}\StringTok{"Variables Random Forest"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-65-1} \end{center}
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-66-1} \end{center}
 
 \hypertarget{predicciuxf3n-y-evaluaciuxf3n-del-algoritmo-4}{%
 \subsubsection{Predicción y Evaluación del
@@ -2705,8 +2671,16 @@ Maligno       7     130  0.05109489
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\KeywordTok{plot}\NormalTok{(rf}\FloatTok{.1000}\NormalTok{, }\DataTypeTok{main=}\StringTok{"modelo Random Forest 1000 árboles"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-68-1} \end{center}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \NormalTok{predict.rf<-}\StringTok{ }\KeywordTok{predict}\NormalTok{(rf}\FloatTok{.1000}\NormalTok{, datos.test)}
-\NormalTok{rf.matrix1000 <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{(datos.test}\OperatorTok{$}\NormalTok{diagnosis, predict.rf)}
+\NormalTok{rf.matrix1000 <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{(datos.test}\OperatorTok{$}\NormalTok{diagnosis, predict.rf,}\DataTypeTok{positive=}\StringTok{"Maligno"}\NormalTok{)}
 \NormalTok{rf.matrix1000}
 \end{Highlighting}
 \end{Shaded}
@@ -2728,28 +2702,29 @@ Prediction Benigno Maligno
                                           
  Mcnemar's Test P-Value : 0.3428          
                                           
-            Sensitivity : 0.9412          
-            Specificity : 0.9577          
-         Pos Pred Value : 0.9739          
-         Neg Pred Value : 0.9067          
-             Prevalence : 0.6263          
-         Detection Rate : 0.5895          
-   Detection Prevalence : 0.6053          
+            Sensitivity : 0.9577          
+            Specificity : 0.9412          
+         Pos Pred Value : 0.9067          
+         Neg Pred Value : 0.9739          
+             Prevalence : 0.3737          
+         Detection Rate : 0.3579          
+   Detection Prevalence : 0.3947          
       Balanced Accuracy : 0.9495          
                                           
-       'Positive' Class : Benigno         
+       'Positive' Class : Maligno         
                                           
 \end{verbatim}
 
 El nuevo modelo obtiene una precisión de 0.947 y una sensitividad y
-especificidad de 0.941 y 0.958 respectivamente. Vemos que el modelo
+especificidad de 0.958 y 0.941 respectivamente. Vemos que el modelo
 obtenido con tres nodo tiene una mayor precision.
 
 \hypertarget{paquete-caret-2}{%
-\subsubsection{Paquete caret}\label{paquete-caret-2}}
+\subsubsection{\texorpdfstring{Paquete
+\emph{caret}}{Paquete caret}}\label{paquete-caret-2}}
 
 Se vuelve a analizar el mismo dataset pero ahora usando el modelo
-\texttt{rf} del paquete caret. Y lo validadmos con 5-fold cross
+\texttt{rf} del paquete \texttt{caret}. Y lo validadmos con 5-fold cross
 validation. Como sabemos, el fichero de train contiene 379 observaciones
 y el de test 190.
 
@@ -2766,11 +2741,11 @@ y el de test 190.
                       \DataTypeTok{repeats=}\DecValTok{3}\NormalTok{)}
 
 \CommentTok{## Tunegrid para Random Forest}
-\CommentTok{# mtry define cuantas variables se seleccionan al azar en cada split. Por }
+\CommentTok{# mtry define cuántas variables se seleccionan al azar en cada split. Por }
 \CommentTok{#  defecto sqrt(n.variables)}
 \NormalTok{grid_rf <-}\StringTok{ }\KeywordTok{expand.grid}\NormalTok{(}\DataTypeTok{mtry =} \KeywordTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{,}\DecValTok{4}\NormalTok{,}\DecValTok{8}\NormalTok{,}\DecValTok{16}\NormalTok{))}
 
-\CommentTok{## trace <- FALSE to  suppress train iterations}
+\CommentTok{## trace <- FALSE para suprimir las iteraciones de entrenamiento}
 \NormalTok{modelo.rf.caret     <-}\StringTok{ }\KeywordTok{train}\NormalTok{ (diagnosis }\OperatorTok{~}\StringTok{ }\NormalTok{.,}
                   \DataTypeTok{data =}\NormalTok{ datos.train,}
                   \DataTypeTok{method =}\StringTok{"rf"}\NormalTok{,}
@@ -2790,7 +2765,7 @@ para la evaliuación del rendimiento creamos la matriz de resultados:
 \CommentTok{# Predicción del diagnóstico}
 \NormalTok{predict.rf2 <-}\StringTok{ }\KeywordTok{predict}\NormalTok{(modelo.rf.caret, }\DataTypeTok{newdata =}\NormalTok{ datos.test)}
 \CommentTok{# Matriz de Confusión}
-\NormalTok{(cfrf <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{(}\DataTypeTok{data=}\NormalTok{predict.rf2, datos.test}\OperatorTok{$}\NormalTok{diagnosis))}
+\NormalTok{(cfrf <-}\StringTok{ }\KeywordTok{confusionMatrix}\NormalTok{(}\DataTypeTok{data=}\NormalTok{predict.rf2, datos.test}\OperatorTok{$}\NormalTok{diagnosis, }\DataTypeTok{positive=}\StringTok{"Maligno"}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -2799,146 +2774,173 @@ Confusion Matrix and Statistics
 
           Reference
 Prediction Benigno Maligno
-   Benigno     112       7
-   Maligno       3      68
+   Benigno     111       7
+   Maligno       4      68
                                           
-               Accuracy : 0.9474          
-                 95% CI : (0.9053, 0.9745)
+               Accuracy : 0.9421          
+                 95% CI : (0.8988, 0.9707)
     No Information Rate : 0.6053          
     P-Value [Acc > NIR] : <2e-16          
                                           
-                  Kappa : 0.8888          
+                  Kappa : 0.878           
                                           
- Mcnemar's Test P-Value : 0.3428          
+ Mcnemar's Test P-Value : 0.5465          
                                           
-            Sensitivity : 0.9739          
-            Specificity : 0.9067          
-         Pos Pred Value : 0.9412          
-         Neg Pred Value : 0.9577          
-             Prevalence : 0.6053          
-         Detection Rate : 0.5895          
-   Detection Prevalence : 0.6263          
-      Balanced Accuracy : 0.9403          
+            Sensitivity : 0.9067          
+            Specificity : 0.9652          
+         Pos Pred Value : 0.9444          
+         Neg Pred Value : 0.9407          
+             Prevalence : 0.3947          
+         Detection Rate : 0.3579          
+   Detection Prevalence : 0.3789          
+      Balanced Accuracy : 0.9359          
                                           
-       'Positive' Class : Benigno         
+       'Positive' Class : Maligno         
                                           
 \end{verbatim}
 
-La precisión es similar al modelo anterior sin el paquete caret
+La precisión es similar al modelo anterior sin el paquete
+\texttt{caret}.
 
-Accuracy es de 0.947\\
-Kappa es de 0.889
+Accuracy es de 0.942\\
+Kappa es de 0.878
 
-\hypertarget{conclusiuxf3n-y-discusiuxf3n}{%
-\section{Conclusión y discusión}\label{conclusiuxf3n-y-discusiuxf3n}}
+\hypertarget{resumen-de-resultados}{%
+\section{Resumen de resultados}\label{resumen-de-resultados}}
 
-\hypertarget{rendimiento-interpretabilidad-de-los-algoritmos-para-el-problema-tratado}{%
-\subsection{Rendimiento, interpretabilidad, \ldots{} de los algoritmos
-para el problema
-tratado}\label{rendimiento-interpretabilidad-de-los-algoritmos-para-el-problema-tratado}}
+En la siguiente tabla se muestra un resumen con los principales
+parámetros obtenidos de la función \texttt{confusionMatrix} del paquete
+\texttt{caret} en cada uno de los algoritmos:
 
-\hypertarget{decisiuxf3n-del-modelo-muxe1s-apropiado}{%
-\subsection{Decisión del modelo más
-apropiado}\label{decisiuxf3n-del-modelo-muxe1s-apropiado}}
-
-Para poder tomar una decisión sobre cuál o cuáles podrían ser los
-mejores modelos a aplicar en este caso, realizo una tabla resumen con
-los principales parámetros obtenidos de la función
-\texttt{confusionMatrix} del paquete \texttt{caret} en cada uno de ellos
-y posteriormente los unimos en una única tabla. Muestro aqui sólo el
-código empleado en los tres primeros casos, en el resto empleamos el
-mismo código:
+Ordenamos los datos según los valores de precisión y especificidad.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{resum1 <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{modelo=}\OtherTok{NA}\NormalTok{, }\DataTypeTok{Accuracy=}\OtherTok{NA}\NormalTok{, }\DataTypeTok{Kappa=}\OtherTok{NA}\NormalTok{, }\DataTypeTok{Sensitivity=}\OtherTok{NA}\NormalTok{, }\DataTypeTok{Specificity=}\OtherTok{NA}\NormalTok{)}
-\NormalTok{resum1[}\DecValTok{1}\NormalTok{,}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{] <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"knn"}\NormalTok{,}\KeywordTok{round}\NormalTok{(cf.knn}\OperatorTok{$}\NormalTok{overall[}\DecValTok{1}\NormalTok{],}\DecValTok{3}\NormalTok{),}\KeywordTok{round}\NormalTok{(cf.knn}\OperatorTok{$}\NormalTok{overall[}\DecValTok{2}\NormalTok{],}\DecValTok{3}\NormalTok{), }\KeywordTok{round}\NormalTok{(cf.knn}\OperatorTok{$}\NormalTok{byClass[}\DecValTok{1}\NormalTok{],}\DecValTok{2}\NormalTok{), }\KeywordTok{round}\NormalTok{(cf.knn}\OperatorTok{$}\NormalTok{byClass[}\DecValTok{2}\NormalTok{],}\DecValTok{3}\NormalTok{))}
-\NormalTok{tabla1 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(resum1[,}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{])}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{resum2 <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{modelo=}\OtherTok{NA}\NormalTok{, }\DataTypeTok{Accuracy=}\OtherTok{NA}\NormalTok{, }\DataTypeTok{Kappa=}\OtherTok{NA}\NormalTok{, }\DataTypeTok{Sensitivity=}\OtherTok{NA}\NormalTok{, }\DataTypeTok{Specificity=}\OtherTok{NA}\NormalTok{)}
-\NormalTok{resum2[}\DecValTok{1}\NormalTok{,}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{] <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"knn z transf"}\NormalTok{,}\KeywordTok{round}\NormalTok{(cf.knn.z}\OperatorTok{$}\NormalTok{overall[}\DecValTok{1}\NormalTok{],}\DecValTok{3}\NormalTok{),}\KeywordTok{round}\NormalTok{(cf.knn.z}\OperatorTok{$}\NormalTok{overall[}\DecValTok{2}\NormalTok{],}\DecValTok{3}\NormalTok{), }\KeywordTok{round}\NormalTok{(cf.knn.z}\OperatorTok{$}\NormalTok{byClass[}\DecValTok{1}\NormalTok{],}\DecValTok{2}\NormalTok{), }\KeywordTok{round}\NormalTok{(cf.knn.z}\OperatorTok{$}\NormalTok{byClass[}\DecValTok{2}\NormalTok{],}\DecValTok{3}\NormalTok{))}
-\NormalTok{tabla2 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(resum2[,}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{])}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{resum3 <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{modelo=}\OtherTok{NA}\NormalTok{, }\DataTypeTok{Accuracy=}\OtherTok{NA}\NormalTok{, }\DataTypeTok{Kappa=}\OtherTok{NA}\NormalTok{, }\DataTypeTok{Sensitivity=}\OtherTok{NA}\NormalTok{, }\DataTypeTok{Specificity=}\OtherTok{NA}\NormalTok{)}
-\NormalTok{resum3[}\DecValTok{1}\NormalTok{,}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{] <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"Naive-Bayes L0"}\NormalTok{,}\KeywordTok{round}\NormalTok{(nb.matrix}\OperatorTok{$}\NormalTok{overall[}\DecValTok{1}\NormalTok{],}\DecValTok{3}\NormalTok{),}\KeywordTok{round}\NormalTok{(nb.matrix}\OperatorTok{$}\NormalTok{overall[}\DecValTok{2}\NormalTok{],}\DecValTok{3}\NormalTok{), }\KeywordTok{round}\NormalTok{(nb.matrix}\OperatorTok{$}\NormalTok{byClass[}\DecValTok{1}\NormalTok{],}\DecValTok{2}\NormalTok{), }\KeywordTok{round}\NormalTok{(nb.matrix}\OperatorTok{$}\NormalTok{byClass[}\DecValTok{2}\NormalTok{],}\DecValTok{3}\NormalTok{))}
-\NormalTok{tabla3 <-}\StringTok{ }\KeywordTok{as.data.frame}\NormalTok{(resum3[,}\DecValTok{1}\OperatorTok{:}\DecValTok{5}\NormalTok{])}
-\end{Highlighting}
-\end{Shaded}
-
-Orneamos los datos según los valores de precisión y especificidad. Como
-vemos esta lista cambia según ordenemos los valores teniendo en cuenta
-ambos parámetros al mismo tiempo, o poniendo uno de ellos como principal
-factor a tener en cuenta y tras ordenar la lista por uno de ellos
-(precisión), la ordenamos por sensibilidad.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{resultado.final <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(}\KeywordTok{rbind}\NormalTok{(tabla1, tabla2, resum, tabla3, tabla4, tabla5, tabla6, tabla7, tabla8, tabla9, tabla10, tabla11, tabla12, tabla13, tabla14, tabla15, tabla16, tabla17, tabla18, tabla19))}
-
-\KeywordTok{library}\NormalTok{(dplyr)}
-\NormalTok{resultado.final }\OperatorTok{%>%}
-\KeywordTok{arrange}\NormalTok{(Accuracy, Sensitivity) }\OperatorTok{%>%}
-\KeywordTok{tail}\NormalTok{()}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-            modelo Accuracy Kappa Sensitivity Specificity
-20              11    0.958  0.91       0.893           1
-21       SVM Gauss    0.958 0.911        0.93       0.974
-22 SVM Caret boots    0.958 0.911        0.93       0.974
-23 SVM Caret 5fold    0.958  0.91        0.97        0.95
-24  Naive-Bayes L1    0.963 0.922        0.93       0.983
-25  Naive-Bayes L0    0.968 0.934        0.95       0.983
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{resultado.final }\OperatorTok{%>%}
-\KeywordTok{arrange}\NormalTok{(Accuracy) }\OperatorTok{%>%}
-\KeywordTok{arrange}\NormalTok{(Sensitivity) }\OperatorTok{%>%}
-\KeywordTok{tail}\NormalTok{()}
+\CommentTok{# Ordenados por precisión y sensibilidad}
+\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{arrange}\NormalTok{(resultado.final, Accuracy, Sensitivity)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
                  modelo Accuracy Kappa Sensitivity Specificity
-20           ANN 1 nodo    0.937 0.869        0.95        0.93
-21       Naive-Bayes L0    0.968 0.934        0.95       0.983
-22        Random forest    0.942 0.877        0.96       0.933
-23  Random forest caret    0.947 0.889        0.97       0.907
-24      SVM Caret 5fold    0.958  0.91        0.97        0.95
-25 Arbol decision caret    0.953   0.9        0.98       0.907
+1      ANN caret 5-fold    0.921 0.835        0.91        0.93
+2           ANN 3 nodos    0.926 0.847        0.93       0.922
+3                    27    0.932 0.853        0.84       0.991
+4        Arbol decision    0.932 0.856        0.89       0.957
+5     Arbol decision 10    0.932 0.856        0.91       0.948
+6             ANN caret    0.932 0.857        0.92       0.939
+7          knn z transf    0.937 0.864        0.84           1
+8            SVM Lineal    0.937 0.866        0.88       0.974
+9             SVM Caret    0.937 0.866        0.88       0.974
+10      SVM Caret 5fold    0.937 0.866        0.88       0.974
+11                    1    0.937 0.867       0.907       0.957
+12           ANN 1 nodo    0.937 0.869        0.95        0.93
+13                   17    0.942 0.876       0.867       0.991
+14                   23    0.942 0.876       0.867       0.991
+15                  knn    0.942 0.876        0.87       0.991
+16  Random forest caret    0.942 0.878        0.91       0.965
+17        Random forest    0.942 0.877        0.96       0.933
+18                    5    0.947 0.889       0.907       0.974
+19   Random forest 1000    0.947 0.889        0.96       0.941
+20 Arbol decision caret    0.953   0.9        0.91       0.983
+21                   11    0.958  0.91       0.893           1
+22            SVM Gauss    0.958 0.911        0.93       0.974
+23      SVM Caret boots    0.958 0.911        0.93       0.974
+24       Naive-Bayes L1    0.963 0.922        0.93       0.983
+25       Naive-Bayes L0    0.968 0.934        0.95       0.983
 \end{verbatim}
 
-Por ello, el mejor modelo a aplicar dependerá de la importancia que le
-demos tanto a la precisión como a la sensibilidad y especificidad en la
-detección del cáncer de mama según nuestros resultados. La sensibilidad
-caracteriza la capacidad de la prueba para detectar la enfermedad en
-sujetos enfermos, lo que tras la precisión quizá debería de ser el
-factor a tener en cuenta y ante igualdad, un mejor valor de
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{better.results <-}\StringTok{ }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{filter}\NormalTok{(resultado.final, Accuracy }\OperatorTok{>}\StringTok{ }\FloatTok{0.946}\NormalTok{)}
+\NormalTok{results <-}\StringTok{ }\NormalTok{dplyr}\OperatorTok{::}\KeywordTok{arrange}\NormalTok{(better.results, Accuracy, Sensitivity)}
+\NormalTok{results}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+                modelo Accuracy Kappa Sensitivity Specificity
+1                    5    0.947 0.889       0.907       0.974
+2   Random forest 1000    0.947 0.889        0.96       0.941
+3 Arbol decision caret    0.953   0.9        0.91       0.983
+4                   11    0.958  0.91       0.893           1
+5            SVM Gauss    0.958 0.911        0.93       0.974
+6      SVM Caret boots    0.958 0.911        0.93       0.974
+7       Naive-Bayes L1    0.963 0.922        0.93       0.983
+8       Naive-Bayes L0    0.968 0.934        0.95       0.983
+\end{verbatim}
+
+En la Tabla anterior se pueden observar que los clasificadores
+Naive-Bayes fueron los más acertados a la hora de clasificar las
+muestras de los pacientes, obteniendo un 96\% de precisión. Por el
+contrario, se puede observar que los clasificadores ANN con el paquete
+\texttt{caret} y Árboles de decisión clasifican las muestras con una
+precisón del 89 \% y 93\% en promedio respectivamente.
+
+\hypertarget{discusiuxf3n-y-conslusiones}{%
+\section{Discusión y conslusiones}\label{discusiuxf3n-y-conslusiones}}
+
+El mejor modelo a aplicar dependerá de la importancia que le demos tanto
+a la precisión como a la sensibilidad y especificidad en la detección
+del cáncer de mama según nuestros resultados.
+
+Como podemos observar en el siguiente gráfico de barras todos los
+modelos generados tienen una accuracy por encima del 85\% siendo el
+modelo generado por el algoritmo Naive-Bayes con Laplace 0 el que mayor
+potencia de clasificación tiene con una accuracy del 96.8\%.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(}\DataTypeTok{data=}\NormalTok{resultado.final, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x=}\NormalTok{modelo, }\DataTypeTok{y=}\NormalTok{Accuracy, }\DataTypeTok{fill=}\NormalTok{modelo)) }\OperatorTok{+}\StringTok{ }
+\StringTok{    }\KeywordTok{geom_bar}\NormalTok{(}\DataTypeTok{stat=}\StringTok{"identity"}\NormalTok{, }\DataTypeTok{position=}\StringTok{"dodge"}\NormalTok{) }\OperatorTok{+}\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{text =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size=}\DecValTok{8}\NormalTok{),}
+                                                         \DataTypeTok{legend.position=}\StringTok{'bottom'}\NormalTok{) }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-94-1} \end{center}
+
+La sensibilidad caracteriza la capacidad de la prueba para detectar la
+enfermedad en sujetos enfermos, lo que tras la precisión quizá debería
+de ser el factor a tener en cuenta y ante igualdad, un mejor valor de
 especificidad. El modelo con mejor precisión es \emph{Naive-Bayes L0}
 sin embargo hay otros modelos con mejor sensibilidad y valores parecidos
-de precisión. El modelo \emph{SVM Caret 5fold} tiene una sensibilidad
-muy elevada, aunque pierde levemente en precisión. \emph{Random forest}
-tiene una elevada precisión y sensibilidad pero un valor muy bajo de
-\texttt{kappa}.
+de precisión. \emph{Random forest} tiene una elevada precisión y
+sensibilidad pero un valor muy bajo de \texttt{kappa}. \emph{Arbol
+decision caret} tiene elevada Sensibilidad y pero menor percisión y
+specificidad.
 
-Por ello, según estos resultados, y los objetivos que buscamos con
-nuestros análisis tanto el modelo \emph{SVM Caret 5fold} como
-\emph{Naive-Bayes L0} serían buenos modelos y con una precisión cercana
-al 95\% tanto en precisión como en sensibilidad y con valores de
-especificidad aceptables. Aunque el modelo que tiene mejores valores en
-cada uno de los factores es el \textbf{árbol de decisión creado con el
-paquete caret y 5-cross validation}.
+Para este conjunto de datos, los modelos que han tenido menos potencia
+de clasificación han sido los generados por el algoritmo de Artificial
+Neural Network (ANN) del paquete \texttt{caret}, por debajo del 90\% de
+accuracy.
+
+El algoritmo de árboles de decisión y Random Forest han tenido valores
+intermedios de Accuracy, sin embargo con valores elevados de
+Sensibility.
+
+He encontrado diferencias significativas a la hora de generar el modelo
+con paquetes específicos de cada algoritmo o utilizando el paquete
+\texttt{caret}, especialmente con el algoritmo SVM que mejora
+significamente si empleamos algún método como 5-fold validation o
+boostrapping. En cambio con el algoritmo ANN los resultados con
+\texttt{caret} muestran menos potencia.
+
+Como conslusión, según estos resultados y los objetivos que buscamos con
+nuestros análisis, el modelo \emph{Naive-Bayes L0} sería el más
+apropiado, con un porcentaje cercano al 95\% tanto en precisión como en
+sensibilidad y con valores de kappa y especificidad aceptables, lo que
+podemos apreciar observando el siguiente gráfico donde podemos
+compararlo con los otros modelos que han mostrado mejores resultados:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(}\DataTypeTok{data=}\NormalTok{results, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x=}\NormalTok{modelo, }\DataTypeTok{y=}\NormalTok{Accuracy, }\DataTypeTok{fill=}\NormalTok{Sensitivity)) }\OperatorTok{+}\StringTok{ }
+\StringTok{    }\KeywordTok{geom_bar}\NormalTok{(}\DataTypeTok{stat=}\StringTok{"identity"}\NormalTok{, }\DataTypeTok{position=}\StringTok{"dodge"}\NormalTok{) }\OperatorTok{+}\StringTok{  }\KeywordTok{theme}\NormalTok{(}\DataTypeTok{text =} \KeywordTok{element_text}\NormalTok{(}\DataTypeTok{size=}\DecValTok{8}\NormalTok{),}
+                                                         \DataTypeTok{legend.position=}\StringTok{'bottom'}\NormalTok{) }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics{PEC3_ML_files/figure-latex/unnamed-chunk-95-1} \end{center}
 
 \hypertarget{bibliografuxeda}{%
 \section*{Bibliografía}\label{bibliografuxeda}}
@@ -2952,6 +2954,11 @@ Vienna}.
 
 \leavevmode\hypertarget{ref-github2016github}{}%
 Github, Inc. 2016. ``GitHub.''
+
+\leavevmode\hypertarget{ref-kuhn2017caret}{}%
+Kuhn, Max. 2017. ``A Short Introduction to the Caret Package.'' \emph{R
+Foundation for Statistical Computing, Vienna, Austria.}
+\url{https://cran.r-project.org/web/packages/caret/vignettes/caret.pdf}.
 
 \leavevmode\hypertarget{ref-lantz2015machine}{}%
 Lantz, Brett. 2015. \emph{Machine Learning with R}. Packt Publishing

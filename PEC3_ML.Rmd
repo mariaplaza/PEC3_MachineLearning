@@ -29,13 +29,14 @@ nocite: |
   @lantz2015machine
   @max2017caret
   @core2013r
+  @kuhn2017caret
 header-includes:
   - \usepackage[spanish]{babel}
   - \usepackage{subfig}
 params:
   file: BreastCancer1.csv
   folder.data: ./datos
-  subtitulo: Tercera prueba de evaluación continua - Cancer de mama
+  subtitulo: Tercera prueba de evaluación continua - Cáncer de mama
   p.train: !r 2/3
   k_value: !r c(1,5,11,17,23,27)
   seed.train: 12345
@@ -49,8 +50,8 @@ require(knitr)
 knitr::opts_chunk$set(
   fig.show = "hold",
   fig.align='center',
-  fig.height = 7,
-  fig.width = 7,
+  fig.height = 4.5,
+  fig.width = 5,
 	message = FALSE,
 	warning = FALSE,
 	cache = TRUE,
@@ -98,7 +99,7 @@ https://github.com/mariaplaza/PEC3_Machine_Learning
 
 # Objetivo
 
-En esta PEC se analizan estos datos mediante la implementación de los diferentes algoritmos estudiados: k-Nearest Neighbour, Naive Bayes, Artificial Neural Network, Support Vector Machine, Arbol de Decisión y Random Forest para diagnosticar el tipo de cáncer de mama.
+En esta PEC se analizan estos datos mediante la implementación de los diferentes algoritmos estudiados: k-Nearest Neighbour, Naive Bayes, Artificial Neural Network, Support Vector Machine, Árbol de Decisión y Random Forest para diagnosticar el tipo de cáncer de mama. Para ello se ha empleado la función de cada algoritmo como se presenta en @lantz2015machine y el paquete `caret` en alguno de los casos.
 
 # Trabajando con los datos
 ## Lectura de datos
@@ -112,26 +113,24 @@ m.file <- ifelse(params$folder.data=="",
                  params$file,
                  file.path(params$folder.data,params$file))
 data <- read.csv(file=m.file)
- 
 ```
 
 ## Exploración y preparación de los datos
 
-Comprobamos que el dataset está completo y se presentan los seis primeros registros:
+Comprobamos que el dataset está completo y se presentan los seis primeros registros de las 6 primeras variables:
 
 ```{r}
 dim(data)
-class(data)
-head(data)
+head(data)[,1:6]
 ```
 
 Nuestro conjunto de datos, *`r params$file`*, esta formado por `r nrow(data)` registros, con valores de `r ncol(data)` características.
 
-La primera variable es una variable numerica denominada `id`. Ya que es un simple identificador de cada paciente en los datos, no proporciona infromacion útil y necesitamos excluirlo del modelo.
-Como está localizado en la primera columna, podemos excluirlo con el siguiente codigo, eliminando del data.frame la columna número 1.
+La primera variable es una variable numérica denominada `id`. Ya que es un simple identificador de cada paciente en los datos, no proporciona infromación útil y necesitamos excluirlo del modelo.
+Como está localizado en la primera columna, podemos excluirlo con el siguiente código, eliminando del *data.frame* la columna número 1.
 
 ```{r}
-# drop the id feature
+# eliminamos la característica id
 data <- data[-1]
 ```
 
@@ -139,11 +138,11 @@ La última variable, "diagnosis", es de particular interés, ya que es el result
 que `r as.numeric(table(data$diagnosis))["M"]` son malignas. La clasificación existente según la diagnosis:
 
 ```{r}
-# table of diagnosis
+# tabla de diagnóstico, según la tipología 
 table(data$diagnosis)
 ```
 
-La mayoria de los clasificadores en *Machine Learning* requiren que esta característica objetivo esté codificada como factor, por lo que recodificamos la variable, de tipo caracter, en tipo factor.
+La mayoría de los clasificadores en *Machine Learning* requiren que esta característica objetivo esté codificada como factor, por lo que recodificamos la variable, de tipo caracter, en tipo factor.
 
 ```{r}
 class(data$diagnosis)
@@ -157,14 +156,14 @@ class(data$diagnosis)
 Ahora, cuando miramos la salida `prop.table ()`, notamos que los valores han sido etiquetados como 'Benigno' y 'Maligno'.
 
 ```{r}
-# table or proportions with more informative labels
+# tabla de la proporción de cada tipo
 round(prop.table(table(data$diagnosis)) * 100, digits = 1)
 ```
 
 Las características restantes de `r ncol(data) -31` son todas numéricas y, como era de esperar, consisten en mediciones diferentes de 30 características. Por ejemplo:
 
 ```{r}
-# summarize three numeric features
+# incluimos tres características numéricas
 kable(summary(data[c("radius_mean", "area_mean", "smoothness_mean")]))
 ```
 
@@ -173,19 +172,53 @@ La estructura final es:
 str(data)
 ```
 
-Veamos como se comportan las características estudiadas según la clasificación de nuestra principal variable, disgnosis. Como veremos, para poder distinguir adecuadamente las variables, debemos cambiar el límite de los ejes, ya que los valores son muy diferentes según las variables:
+Veamos como se comportan las características estudiadas según la clasificación de nuestra principal variable, disgnosis. Realizamos para ello una exploración gráfica con un boxplot de las variables numéricas. Como veremos, se pueden observarlas diferencias en la escala de estas variables, y para poder distinguir adecuadamente las variables, debemos cambiar el límite de los ejes:
 
-```{r}
-boxplot(data,main='Datos sin normalizar',col=c('brown', 'green'),cex.axis=0.7,subset=data$diagnosis, ylim=c(0.05,1000))
+```{r fig.width=8}
+boxplot(data,main='Datos sin normalizar',col=c('lightgreen', 'orange'),cex.axis=0.7,
+        subset=data$diagnosis, ylim=c(0.05,1000))
 
-boxplot(data,main='Datos sin normalizar',col=c('brown', 'green'),cex.axis=0.7,subset=data$diagnosis, ylim=c(0,0.30))
+boxplot(data,main='Datos sin normalizar',col=c('lightgreen', 'orange'),cex.axis=0.7,
+        subset=data$diagnosis, ylim=c(0,0.30))
+```
+
+Además se presenta el comportamiento de las primeras 12 variables del dataset en función del tipo de diagnóstico:
+
+```{r echo=FALSE, fig.height=6, fig.width=7.5}
+Conf4x3 = matrix(c(1:12), nrow=3, byrow=TRUE)
+layout(Conf4x3)
+
+boxplot(data[,1] ~ data$diagnosis, ylab = "radius_mean", xlab = "", col=c("lightgreen",
+                                                                          "orange"))
+boxplot(data[,2] ~ data$diagnosis, ylab = "texture_mean", xlab = "", col=c("lightgreen", 
+                                                                           "orange"))
+boxplot(data[,3] ~ data$diagnosis, ylab = "perimeter_mean", xlab = "", col=c("lightgreen", 
+                                                                             "orange"))
+boxplot(data[,4] ~ data$diagnosis, ylab = "area_mean", xlab = "", col=c("lightgreen", 
+                                                                        "orange"))
+boxplot(data[,5] ~ data$diagnosis, ylab = "smoothness_mean", xlab = "", col=c("lightgreen", 
+                                                                              "orange"))
+boxplot(data[,6] ~ data$diagnosis, ylab = "compactness_mean", xlab = "", col=c("lightgreen",
+                                                                               "orange"))
+boxplot(data[,7] ~ data$diagnosis, ylab = "concavity_mean", xlab = "", col=c("lightgreen", 
+                                                                             "orange"))
+boxplot(data[,8] ~ data$diagnosis, ylab = "concave.points_mean", xlab = "", col=c("lightgreen",
+                                                                                  "orange"))
+boxplot(data[,9] ~ data$diagnosis, ylab = "symmetry_mean", col=c("lightgreen", 
+                                                                 "orange"))
+boxplot(data[,10] ~ data$diagnosis, ylab = "fractal_dimension_mean", xlab = "",col=c("lightgreen", 
+                                                                                      "orange"))
+boxplot(data[,11] ~ data$diagnosis, ylab = "radius_se", xlab = "", col=c("lightgreen", 
+                                                                         "orange"))
+boxplot(data[,12] ~ data$diagnosis, ylab = "texture_se", xlab = "", col=c("lightgreen", 
+                                                                          "orange"))
 ```
 
 Cada variable muestra diferencias en los resultados según pertenezcan a tejido sano o tumoral. Sin embargo, aunque normalmente el tejido sano parece mostrar valores menores que el tejido tumoral, depende generalmente de la variable. Mostrando por ejemplo valores muy similares en la viariable "fractal_dimension_mean". Podemos ver cada variable de forma independiente, pero ya que tenemos un gran número de variables, el estudio puede extenderse demasiado. 
 
 Como muestra, podemos realizar un anáisis aleatorio de todas las muestras. Para ello, se toma una muestra de 15 tejidos sanos y otra muestra de tejidos tumorales, analizando la distribución resultante de 5 variabls aleatorias:
 
-```{r fig.height=4}
+```{r fig.height=4, fig.width=6}
 indicesT <- which(data$diagnosis =='Maligno')
 indicesN <- which(data$diagnosis =='Benigno')
 
@@ -203,16 +236,16 @@ datasetT <- data[aleatT,aleatG]
 datasetN <- data[aleatN,aleatG]
 
 par(mfrow=c(1,2))
-boxplot(datasetN,cex.axis=0.6,ylab='',main="Tejido normal",las=2)
+boxplot(datasetN,cex.axis=0.6,ylab='',main="Tejido normal",las=2, col="lightgreen")
 abline(h = 500,col='red')
-boxplot(datasetT,cex.axis=0.6,ylab='', main="Tejido tumoral", las=2)
+boxplot(datasetT,cex.axis=0.6,ylab='', main="Tejido tumoral", las=2, col = "orange")
 abline(h = 500,col='red')
 ```
 
 Por otro lado, podemos realizar una normalización de los datos, de forma que todos se encuentran entre 0 y 1 y nos permita una visualización  más sencilla y fácil de interpretar:
 
 ```{r}
-# Funcion de normalizacion
+# Función de normalización
 normalize <- function(x) {
   return ((x - min(x)) / (max(x) - min(x)))
 }
@@ -220,11 +253,12 @@ normalize <- function(x) {
 
 Ahora podemos aplicar la función `normalize()` a las características numéricas en nuestro marco de datos. En lugar de normalizar cada una de las 30 variables numéricas individualmente, utilizaremos una de las funciones de R para automatizar el proceso.
 
-```{r fig.height=6}
+```{r fig.width=8}
 # normalizamos los datos
 data.norm <- as.data.frame(lapply(data[,-31], normalize))
 # Los graficamos
-boxplot(data.norm,main='Datos normalizados',col=c('lightblue'),cex.axis=0.7,subset=data$diagnosis)
+boxplot(data.norm,main='Datos normalizados',col=c('lightblue', "orange"),cex.axis=0.7,
+        subset=data$diagnosis)
 abline(h=0.5,lwd=1, col="red")
 ```
 
@@ -235,8 +269,8 @@ Realizamos *aleatoriamente* una extracción de los datos para entrenar el modelo
 ```{r }
 #fijamos la semilla para el generador pseudoaleatorio
 set.seed(params$seed.train) 
-
-# creamos los grupos de entrenamiento (train) y prueba (test)
+# creamos los grupos de entrenamiento (datos.train) y prueba (datos.test) con la selección 
+# aleatoria de los datos asignando el 67% a train y 33% a test (train).
 train<-sample(1:nrow(data),round(nrow(data)*params$p.train,0))
 datos.train <- data.frame(data[train,])
 datos.test  <- data.frame(data[-train,])
@@ -261,18 +295,22 @@ Vemos que es muy similar, por lo que los datos están equilibrados.
 ## k-Nearest Neighbour
 ### Transformación de los datos
 
-Para aplicar el algoritmo de k-nearest necesitamos tener los datos normalizados. Este paso lo hemos realizado con el fin de graficar los datos de forma apropiada en el apartado anterior, por lo que usaremos el data frame `data.norm` creado en el apartado *Exploración y preparación de los datos*. 
+Para aplicar el algoritmo de k-nearest necesitamos tener los datos normalizados. Ya que se debe aplicar la misma selección de datos training y test en todos los algoritmos, empleamos la misma selección de datos anteriores (dentro del vector *train*) pero sobre los datos normalizados y creamos de nuevo ambos grupos.
 
-Cuando construimos nuestros datos de entrenamiento y prueba, excluimos la variable objetivo, 'diagnosis'. Para entrenar el modelo kNN, necesitaremos almacenar estas etiquetas de clase en vectores de factores, divididos en los conjuntos de datos de entrenamiento y prueba, además creamos de nuevo los grupos de entrenamiento y prueba con los datos normalizados:
+Por otro lado, cuando construimos nuestros datos de entrenamiento y prueba, excluimos la variable objetivo, 'diagnosis'. Para entrenar el modelo kNN, necesitaremos ahora almacenar estas etiquetas de clase en vectores de factores, divididos en los conjuntos de datos de entrenamiento y prueba:
 
 ```{r}
 #fijamos la semilla para el generador pseudoaleatorio
 set.seed(params$seed.train) 
-
+# train<-sample(1:nrow(data),round(nrow(data)*params$p.train,0)) # contiene nuestra 
+# selección aleatoria de datos para entrenamiento con el 67% de los datos
 # creamos los grupos de entrenamiento (train) y prueba (test) con los datos normalizados
-train<-sample(1:nrow(data),round(nrow(data)*params$p.train,0))
-datos.train.n <- data.frame(data.norm[train,])
-datos.test.n  <- data.frame(data.norm[-train,])
+datos.train.n <- data.frame(data.norm[train,]) # 67% de los datos
+datos.test.n  <- data.frame(data.norm[-train,]) # 33% de los datos
+
+nrow(datos.train.n)/nrow(datos.test.n) # vemos que coincide con la calisifcación realizada 
+# para los datos sin normalizar. empleamos por tanto la misma selección de datos,
+# pero normalizados.
 
 # Creamos las etiquetas para ambos grupos
 datos.train.label <- data[train, 31]
@@ -281,7 +319,7 @@ datos.test.label <- data[-train, 31]
 
 ### Entrenar el modelo
 
-Para clasificar nuestras muestras, usamos la funcion `knn()` para clasificar los datos del grupo test:
+Para clasificar nuestras muestras, usamos la función `knn()` para clasificar los datos del grupo test:
 
 ```{r}
 library(class)
@@ -297,7 +335,8 @@ El siguiente paso es evaluar qué tan bien las clases predichas en el vector `da
 
 ```{r}
 library(gmodels)
-# Podemos crear una tabulación cruzada que indique el acuerdo entre los dos vectores. Especificando `prop.chisq = FALSO`
+# Podemos crear una tabulación cruzada que indique el acuerdo entre los dos vectores, 
+# especificando `prop.chisq = FALSO`
 conf.mat <- CrossTable(x = datos.test.label, y = data.test.pred,
            prop.chisq = FALSE)
 ```
@@ -318,16 +357,16 @@ El modelo knn con categoria positiva 'Maligno' obtiene una precision de `r round
 
 Vamos a intentar ahora otra iteración del modelo para ver si podemos mejorar el rendimiento y reducir el número de valores que se han clasificado incorrectamente, especialmente aquellos casos *falsos negativos*, ya que sería grave identificar como benigno una muestra cuando en realizad es maligna. cuando en realidad era benigno. Aunque todos los errores obtenidos deben de tratar evitarse, ya que losw falsos positivos pueden ocasionar estres al paciente o gastos innecesarios al hospital.
 
-Para mejorar el modelo vamos a realizar dos variaciones además de implementar el modelo con el paquete caret. Intentaremos dos variaciones simples en el clasificador anterior. Primero, un método que reescala las variables numéricas y en segundo lugar, intentaremos varios valores del parámetro *k*.
+Para mejorar el modelo vamos a realizar dos variaciones además de implementar el modelo con el paquete `caret`. Intentaremos dos variaciones simples en el clasificador anterior. Primero, un método que reescala las variables numéricas y en segundo lugar, intentaremos varios valores del parámetro *k*.
 
 #### Posible mejora 1: Transformación - estandarización de z
 
 Para estandarizar nuestros valores, excepto la variable diagnosis que no es numérica, emplearemos la función `scale()` de R, que por defecto reescala los valores usando the z-score standardization y almacenamos el resultado en la variable` data.z`.
 
 ```{r}
-# use the scale() function to z-score standardize a data frame
+# empleamos la función scale() para estandarizar a z-score nuestro data frame
 data.z <- as.data.frame(scale(data[-31]))
-# comprobamos que se ha aplicado la transformacion
+# comprobamos que se ha aplicado la transformación
 summary(data.z$area_mean)
 ```
 
@@ -363,7 +402,10 @@ for (i in k_valor){
   data.test.pred.k <- knn(train = datos.train.n, test = datos.test.n, cl = datos.train.label, k=i)
   cf.knn.k <- confusionMatrix(data.test.pred.k,datos.test.label,positive="Maligno")
   
-  resum[j,2:5] <- c(round(cf.knn.k$overall["Accuracy"], 3), round(cf.knn.k$overall["Kappa"], 3), round(cf.knn.k$byClass["Sensitivity"], 3), round(cf.knn.k$byClass["Specificity"], 3))
+  resum[j,2:5] <- c(round(cf.knn.k$overall["Accuracy"], 3), round(cf.knn.k$overall["Kappa"], 
+                                                                  3), 
+                    round(cf.knn.k$byClass["Sensitivity"], 3), 
+                    round(cf.knn.k$byClass["Specificity"], 3))
 }
 print(resum)
 ```
@@ -437,21 +479,19 @@ Se presentan las curvas ROC para el modelo de Naive Bayes con `laplace=0` y `lap
 **Caso `laplace=0`**
 
 El primer paso es obtener las probabilidades diagnosis (Maligno/Benigno) para cada muestra de los datos de test:
-
 ```{r}
 test.pred.nb3 <- predict(data.nb, datos.test, type="raw")
 tail(test.pred.nb3)
 ```
 
-Con la información de las probabilidades de la clase positiva (1) se construye la curva ROC.
-
+Con la información de las probabilidades de la clase positiva ("Maligno" o 2) se construye la curva ROC.
 ```{r}
 require(ROCR,quietly=TRUE)
 
 pred <- prediction(predictions= test.pred.nb3[,2], labels=datos.test.label)
 perf <- performance(pred, measure="tpr", x.measure="fpr")
 
-plot(perf, main= "ROC curve", col= "blue", lwd=3, colorize=TRUE)
+plot(perf, main= "ROC curve Laplace 0", col= "blue", lwd=3, colorize=TRUE)
 abline(a=0, b= 1, lwd= 2, lty = 2)
 perf.auc <- performance(pred, measure ="auc")
 ```
@@ -473,7 +513,7 @@ Con la información de las probabilidades de la clase positiva (1) se construye 
 pred2 <- prediction(predictions= test.pred.nb4[,2], labels=datos.test.label)
 perf2 <- performance(pred2, measure="tpr", x.measure="fpr")
 
-plot(perf2, main= "ROC curve", col= "blue", lwd=3, colorize=TRUE)
+plot(perf2, main= "ROC curve Laplace 1", col= "blue", lwd=3, colorize=TRUE)
 abline(a=0, b= 1, lwd= 2, lty = 2)
 perf2.auc <- performance(pred2, measure ="auc")
 
@@ -483,7 +523,7 @@ unlist(perf2.auc@y.values)
 El area bajo la curva es **`r unlist(perf2.auc@y.values)`** y con `laplace = 0` es **`unlist(perf.auc@y.values)`**. Como vemos no mejora la predicción, por lo que no tiene sentido cambiar el argumento de 0 a 1.
 
 ## Artificial Neural Network
-### Transformacion de los datos
+### Transformación de los datos
 
 Hay que normalizar las variables para que tomen valores entre 0 y 1, tal y como hemos realizado en la clasificación de k-nn. Los datos normalizados se encuentran dentro de `data.norm`
 
@@ -507,8 +547,7 @@ data.norm$B <- data$diagnosis=="Benigno"
 Del mismo modo emplearemos los conjuntos para entrenamiento y prueba creados en el apartado anterior con datos normalizados, pero incluyendo ahora las dos nuevas variables:
 
 ```{r}
-# create labels for training and test data
-
+# creamos las etiquetas para los grupos de training and test
 datos.train.nn <- data.frame(data.norm[train,])
 datos.test.nn  <- data.frame(data.norm[-train,])
 
@@ -521,7 +560,6 @@ datos.test.label <- data[-train, 31]
 Para la construcción de la red neuronal artificial se usa la función `neuralnet()` del paquete *neuralnet*. La fórmula del modelo tiene `r ncol(data.norm)` nodos de entrada y 2 (niveles de `data$diagnosis`) nodos de salida:
 
 ```{r formula, message=FALSE, warning=FALSE}
-
 # Creamos una formula para desarrollar el modelo 
 # con todas y cada una de las 32 variables:
 xnam <- names(data[1:30])
@@ -538,7 +576,7 @@ nn.model.1 <- neuralnet(fmla,
                           data = datos.train.nn,
                           hidden=1, linear.output=FALSE)
 # Visualizamos la topología de la red neuronal:
-plot(nn.model.1, rep='best')
+plot(nn.model.1, rep='best', main="ANN con un nodo")
 ```
 
 ### Predicción y Evaluación del algoritmo
@@ -555,7 +593,7 @@ max.idx <- function(xxy) {
 }
 idx1 <- apply(nn.model.1.matrix, 1, max.idx)
 prediction <- c('Maligno', 'Benigno')[idx1]
-result <- table(prediction, data$diagnosis[-train])
+result <- table(prediction, data$diagnosis[-train]) # comparar con los datos test
 
 # Resultados
 library(caret)
@@ -576,7 +614,7 @@ nn.model.3 <- neuralnet(fmla,
                         data = datos.train.nn,
                         hidden=3,linear.output=FALSE)
 # visualizamos la topología de la red
-plot(nn.model.3, rep='best')
+plot(nn.model.3, rep='best', main="ANN con tres nodos")
 ```
 
 El resultado de la matriz de confusión con los datos de test es:
@@ -586,7 +624,7 @@ nn.model.3.matrix <- predict(nn.model.3, datos.test.nn[,1:32])
 
 idx3 <- apply(nn.model.3.matrix, 1, max.idx)
 prediction3 <- c('Maligno', 'Benigno')[idx3]
-result.3 <- table(prediction3, data$diagnosis[-train])
+result.3 <- table(prediction3, data$diagnosis[-train]) # comparar con los datos test
 
 # Resultados
 (cmatrix3 <- confusionMatrix(result.3,positive = "Maligno"))
@@ -602,21 +640,21 @@ La función `nnet` admite datos de tipo factor, así que no hay que transformar 
 Veamos como responde el modelo con los datos de test y train:
 
 ```{r warning=FALSE,message=FALSE, fig.height=5}
-# modelo Train/test without repetition
+# modelo Train/test sin repetición
 library(caret)
 library(NeuralNetTools)
 model.nnet <- train(diagnosis ~ ., datos.train, method='nnet', 
                trControl= trainControl(method='none'), 
-              # preProcess = "range",
+               preProcess = "range", # probamos con un preproceso de los datos
                tuneGrid= NULL, tuneLength=1 ,trace = FALSE) #
 
-plotnet(model.nnet)
+plotnet(model.nnet, main="modelo `nnet` con caret")
 #summary(model.nnet)
-prediction.nnet <- predict(model.nnet, datos.test)               # predict
-result.caret1 <- table(prediction.nnet, datos.test$diagnosis)       # compare
+prediction.nnet <- predict(model.nnet, datos.test)         # predecir los resultados
+result.caret1 <- table(prediction.nnet, datos.test$diagnosis) # comparar con los datos test
 result.caret1
 
-# predict también puede devolver la probabilidad para cada clase:
+# la función predict también puede devolver la probabilidad para cada clase:
 prediction.nnet1 <- predict(model.nnet, datos.test, type="prob")  
 head(prediction.nnet1)
 
@@ -624,7 +662,7 @@ head(prediction.nnet1)
 (cmatrix.nnet <- confusionMatrix(result.caret1,positive = "Maligno"))
 ```
 
-El modelo empleando caret con categoria positiva 'Maligno' obtiene una precision de `r round(cmatrix.nnet$overall["Accuracy"], 3)` y una sensitividad y especificidad de `r round(cmatrix.nnet$byClass["Sensitivity"], 3)` y `r round(cmatrix.nnet$byClass["Specificity"], 3)` respectivamente.
+El modelo empleando `caret` con categoria positiva 'Maligno' obtiene una precision de `r round(cmatrix.nnet$overall["Accuracy"], 3)` y una sensitividad y especificidad de `r round(cmatrix.nnet$byClass["Sensitivity"], 3)` y `r round(cmatrix.nnet$byClass["Specificity"], 3)` respectivamente.
 
 Empleamos ahora **5-fold crossvalidation** para tratar de mejorar la clasificación:
 
@@ -636,8 +674,8 @@ model.nnet.2 <- train(diagnosis ~ ., datos.train, method='nnet',
 
 plotnet(model.nnet.2, alpha=0.6)
 #summary(model.nnet.2)
-prediction.nnet2 <- predict(model.nnet.2, datos.test)               # predict
-result.caret2 <- table(prediction.nnet2, datos.test$diagnosis)      # compare
+prediction.nnet2 <- predict(model.nnet.2, datos.test)           # predecir los resultados
+result.caret2 <- table(prediction.nnet2, datos.test$diagnosis)  # comparar con los datos test
 result.caret2
 
 # la probabilidad para cada clase:
@@ -647,12 +685,12 @@ head(prediction.nnet2)
 (cmatrix.nnet2 <- confusionMatrix(result.caret2,positive = "Maligno"))
 ```
 
-El modelo empleando caret  con 5-fold crossvalidation obtiene una precision de `r round(cmatrix.nnet2$overall["Accuracy"], 3)` y una sensitividad y especificidad de `r round(cmatrix.nnet2$byClass["Sensitivity"], 3)` y `r round(cmatrix.nnet2$byClass["Specificity"], 3)` respectivamente.
+El modelo empleando `caret`  con 5-fold crossvalidation obtiene una precision de `r round(cmatrix.nnet2$overall["Accuracy"], 3)` y una sensitividad y especificidad de `r round(cmatrix.nnet2$byClass["Sensitivity"], 3)` y `r round(cmatrix.nnet2$byClass["Specificity"], 3)` respectivamente.
 
-Como vemos con el paquete caret obtenemos los mejores valores si no realizamos la 5-fold crossvalidation.
+Como vemos con el paquete `caret` obtenemos los mejores valores si no realizamos la 5-fold crossvalidation.
 
 ## Support Vector Machine
-### Transformacion de los datos
+### Transformación de los datos
 
 El SVM no requiere realizar transformaciones normalizantes de los datos.
 
@@ -660,7 +698,7 @@ El porcentaje de muestras tumorales en los datos de training es de `r round((tab
 
 ### Entrenar el modelo
 
-El algoritmo de SVM que se usa es la funcion `ksvm()` del paquete *kernlab*. Se construye el modelo más sencillo, el lineal, usando como kernel el valor `vanilladot`:
+El algoritmo de SVM que se usa es la función `ksvm()` del paquete *kernlab*. Se construye el modelo más sencillo, el lineal, usando como kernel el valor `vanilladot`:
 
 ```{r message=FALSE, warning=FALSE}
 library(kernlab)
@@ -671,7 +709,7 @@ modeloLineal <- ksvm(diagnosis~.,data=datos.train, kernel='vanilladot')
 modeloLineal
 ```
 
-Se puede observar que la funcion lineal no tiene parametros adicionales ('hiperparametros') al de coste.
+Se puede observar que la función lineal no tiene parametros adicionales ('hiperparametros') al de coste.
 
 ### Predicción y Evaluación del algoritmo.
 
@@ -684,12 +722,12 @@ modLineal.pred <- predict(modeloLineal, datos.test)
 Se obtiene la matriz de confusión, usando la función `confusionMatrix`, al igual que en los otros algoritmos:
 
 ```{r warning=FALSE,message=FALSE}
-#Modelo lineal
+# Modelo lineal
 res.svm <- table(modLineal.pred, datos.test$diagnosis)
 (cmatrixSVM <- confusionMatrix(res.svm, positive="Maligno"))
 ```
 
-El modelo de SVM lineal con categoria positiva 'tumor' obtiene una precisión de `r round(cmatrixSVM$overall["Accuracy"], 3)` y una sensitividad y especificidad de `r round(cmatrixSVM$byClass["Sensitivity"], 3)` y `r round(cmatrixSVM$byClass["Specificity"], 3)` respectivamente.
+El modelo de SVM lineal con categoria positiva 'Maligno' obtiene una precisión de `r round(cmatrixSVM$overall["Accuracy"], 3)` y una sensitividad y especificidad de `r round(cmatrixSVM$byClass["Sensitivity"], 3)` y `r round(cmatrixSVM$byClass["Specificity"], 3)` respectivamente.
 
 #### Posible mejora: kernel Gaussiano
 
@@ -699,7 +737,7 @@ Ahora se plantea un SVM con un el kernel Gaussiano, `rbfdot` para tratar de mejo
 set.seed(params$seed.clsfier)
 modeloGauss <- ksvm(diagnosis~.,data=datos.train, 
                      kernel='rbfdot')
-#Prediccion
+# Predicción
 modeloGauss.pred <- predict(modeloGauss, datos.test)
 ```
 
@@ -707,22 +745,22 @@ El resultado de la matriz de confusión con los datos de test es:
 
 ```{r message=FALSE, warning=FALSE, tidy=TRUE}
 res.svm.gaus <- table(modeloGauss.pred, datos.test$diagnosis)
-# Results
+# Resultados
 library(caret)
 (cmatrixSVM2 <- confusionMatrix(res.svm.gaus,positive="Maligno"))
 ```
 
 El nuevo modelo de SVM con kernel gaussiano obtiene una precision de `r round(cmatrixSVM2$overall["Accuracy"], 3)` y una sensitividad y especificidad de `r round(cmatrixSVM2$byClass["Sensitivity"], 3)` y `r round(cmatrixSVM2$byClass["Specificity"], 3)` respectivamente. `r if(cmatrix1$overall["Accuracy"] > cmatrixSVM2$overall["Accuracy"]){"Vemos que el modelo obtenido con SVM lineal tiene una mayor precision"}``r if(cmatrix1$overall["Accuracy"] < cmatrixSVM2$overall["Accuracy"]){"Vemos que el modelo obtenido con SVM gaussiano tiene una mayor precision"}``r if(cmatrix1$overall["Accuracy"] == cmatrixSVM2$overall["Accuracy"]){"Vemos que ambos modelos tienen la misma precision"}`.
 
-### Paquete caret
+### Paquete *caret*
 
-Se construye un nuevo modelo con el objetivo de comprobar si la implementación del paquete **caret** produce diferencias. Se evalúa el rendimiento con la partición train/test y 5-fold cross validation en el modelo lineal y bootstrap con el modelo radial.
+Se construye un nuevo modelo con el objetivo de comprobar si la implementación del paquete `caret` produce diferencias. Se evalúa el rendimiento con la partición train/test y 5-fold cross validation en el modelo lineal y bootstrap con el modelo radial.
 
-Para crear la partición de los datos en training/test podemos emplear la función `createDataPartition` del paquete **caret**, aunque también podemos emplear los datos creados en el apartado 3.3.
+Para crear la partición de los datos en training/test tenemos la posibilidad de emplear la función `createDataPartition` del paquete `caret`. Como curiosidad veamos que ocurre con los resultados, pero posteriormente emplearemos el mismo set de datos de training/test creados en el apartado 3.3, para poder comprar los resultados.
 
 ```{r warning=FALSE,message=FALSE}
 library(caret)
-#Particion de datos
+# Partición de datos
 set.seed(params$seed.train)
 # We wish 75% for the trainset 
 inTrain <- createDataPartition(y=data$diagnosis, p=params$p.train, list=FALSE)
@@ -733,32 +771,32 @@ test.set  <- data[-inTrain,]
 nrow(train.set)/nrow(test.set) # debe estar alrededor de 2
 ```
 
-Entrenamos el modelo con los datos de train y test creados por el paquete caret:
+Entrenamos el modelo con los datos de train y test creados por el paquete `caret`:
 
 ```{r warning=FALSE,message=FALSE}
-# modelo solo de Train sin repeticion
+# modelo sólo de Train sin repetición
 set.seed(params$seed.otro)
 model.svm.caret <- train(diagnosis ~ ., train.set, method='svmLinear', 
                trControl= trainControl(method='none'), 
                 tuneGrid= NULL, trace = FALSE) #
 
-prediction.svm.caret <- predict(model.svm.caret, test.set)         # predict
-res.svm.caret <- table(prediction.svm.caret, test.set$diagnosis)    # compare
+prediction.svm.caret <- predict(model.svm.caret, test.set)         # predecir los resultados
+res.svm.caret <- table(prediction.svm.caret, test.set$diagnosis)   # comparar con los datos test
 
 confusionMatrix(res.svm.caret, positive="Maligno")   
 ```
 
-Ahora se repite el modelo pero con los mismos datos de training/test usados en la funcion `ksvm` con kernel `vanilladot` del paquete kernlab, para comprobar las variaciones:
+Ahora se repite el modelo pero con los mismos datos de training/test usados en la función `ksvm` con kernel `vanilladot` del paquete *kernlab*, para comprobar las variaciones:
 
 ```{r warning=FALSE,message=FALSE}
-# modelo solo de Train sin repeticion
+# modelo sin repetición
 set.seed(params$seed.otro)
 model.svm.caret2 <- train(diagnosis ~ ., datos.train, method='svmLinear', 
                trControl= trainControl(method='none'), 
                 tuneGrid= NULL, trace = FALSE)
 
-prediction.svm.caret2 <- predict(model.svm.caret2, datos.test)          # predict
-res.svm.caret2 <- table(prediction.svm.caret2, datos.test$diagnosis)    # compare
+prediction.svm.caret2 <- predict(model.svm.caret2, datos.test)          # predecir los resultados
+res.svm.caret2 <- table(prediction.svm.caret2, datos.test$diagnosis)    # comparar con los datos test
 
 svm.caret.matrix <- confusionMatrix(res.svm.caret2, positive="Maligno")   
 ```
@@ -772,19 +810,19 @@ Empleamos ahora **5-fold crossvalidation** para tratar de mejorar la clasificaci
 ```{r warning=FALSE,message=FALSE}
 # modelo 5-crossvalidation 
 set.seed(params$seed.clsfier)
-model.svm.fold <- train(diagnosis ~ ., train.set, method='svmLinear', 
+model.svm.fold <- train(diagnosis ~ ., datos.train, method='svmLinear', 
                trControl= trainControl(method='cv', number=5), 
                 tuneGrid= NULL, trace = FALSE)
 
-prediction.fold <- predict(model.svm.fold, test.set)       # predict
-res.fold <- table(prediction.fold, test.set$diagnosis)         # compare
+prediction.fold <- predict(model.svm.fold, datos.test)      # predecir los resultados
+res.fold <- table(prediction.fold, datos.test$diagnosis)    # comparar con los datos test
 
 svm.caret.matrix5 <- confusionMatrix(res.fold, positive="Maligno")   
 ```
 
 El modelo de SVM lineal con categoria positiva 'Maligno' obtiene una precisión de `r round(svm.caret.matrix5$overall["Accuracy"], 3)` y una sensitividad y especificidad de `r round(svm.caret.matrix5$byClass["Sensitivity"], 3)` y `r round(svm.caret.matrix5$byClass["Specificity"], 3)` respectivamente.
 
-Obtenemos datos similares empleando el paquete caret pero sin 5-fold crossvalidation. 
+Obtenemos datos similares empleando el paquete `caret` pero sin 5-fold crossvalidation. 
 
 Por último empleamos bootstrap con el modelo SVM `svmRadial`:
 
@@ -792,13 +830,12 @@ Por último empleamos bootstrap con el modelo SVM `svmRadial`:
 # Por defecto es Bootstrap, con 25 repeticiones para 3 posibles decay
 # y 3 posibles sizes
 set.seed(params$seed.clsfier)
-model.svm.caret3 <- train(diagnosis ~ ., datos.train, method='svmRadial', trace = FALSE) # train
-# we also add parameter 'preProc = c("center", "scale"))' at train() for centering and scaling the data
+model.svm.caret3 <- train(diagnosis ~ ., datos.train, method='svmRadial', trace = FALSE)
 
-prediction.boots <- predict(model.svm.caret3, datos.test)      # predict
-res.svm.boots <- table(prediction.boots, datos.test$diagnosis)        # compare
+prediction.boots <- predict(model.svm.caret3, datos.test)      # predecir los resultados
+res.svm.boots <- table(prediction.boots, datos.test$diagnosis) # comparar con los datos test
 
-res.svm.boots.matrix <- confusionMatrix(res.svm.boots, positive="Maligno")    # compare
+res.svm.boots.matrix <- confusionMatrix(res.svm.boots, positive="Maligno")
 res.svm.boots.matrix
 ```
 
@@ -812,7 +849,7 @@ El algorítmo de árboles de decisión no requiere realizar transformaciones nor
 ### Entrenar el modelo 
 
 ```{r}
-#fijar la semilla para el clasificador
+# fijamos la semilla para el clasificador
 library(C50)
 set.seed(params$seed.clsfier)
 data.model.ab<- C5.0(datos.train[-31], datos.train$diagnosis)
@@ -869,7 +906,7 @@ Comprobamos si empleando el algoritmo C 4.5,  mediante la adición de refuerzo a
 La función `C5.0()` facilita agregar aumentos a nuestro árbol de decisión C5.0. Simplemente necesitamos agregar un parámetro adicional **trials** que indique el **número de árboles de decisión separados** para usar en el modelo. Este parámetro establece un límite superior; el algoritmo dejará de agregar árboles si reconoce que las pruebas adicionales no parecen mejorar la precisión. Comenzaremos con `trials=10` , un número qestándar, ya que las investigaciones sugieren que esto reduce las tasas de error en los datos de prueba en aproximadamente un 25 por ciento:
 
 ```{r}
-#fijar la semilla para el clasificador
+# fijamos la semilla para el clasificador
 set.seed(params$seed.clsfier)
 model.boost10 <- C5.0(datos.train[-31], datos.train$diagnosis, trials = 10)
 summary(model.boost10)
@@ -889,10 +926,10 @@ La precisión se ha mantenido respecto al modelo C5.0 sin boosting. Sin embargo 
 Accuracy es de `r round(cf.arbol.10$overall["Accuracy"],3)`  
 Kappa es de `r round(cf.arbol.10$overall["Kappa"],3)`
 
-### Paquete caret
+### Paquete *caret*
 
 Empleamos los mismos grupos de train y test que hemos empleado en el análisis anterior.
-Para ajustar el modelo se emplea la funcion `train` y empleamos 5-fold crossvalidation para entrenarlo:
+Para ajustar el modelo se emplea la función `train` y empleamos 5-fold crossvalidation para entrenarlo:
 
 ```{r message=FALSE, warning=FALSE}
 ## método : cv K-fold cross validation
@@ -905,7 +942,7 @@ ctrl <- trainControl( method="cv",
 ## trials -> número de iteraciones boosting 
 grid_C50 <- expand.grid(model="tree", trials=c(5,10,20,30),winnow="FALSE")
 
-# fijar la semilla para el clasificador
+# fijamos la semilla para el clasificador
 set.seed(params$seed.clsfier)
 ## trace <- FALSE para suprimir las iteraciones de entrenamiento
 modeloC5.0     <- train (diagnosis ~ .,
@@ -926,16 +963,16 @@ para la evaliuación del rendimiento creamos la matriz de resultados:
 # Predicción de Clases
 prd.c50 <- predict ( modeloC5.0, newdata = datos.test)
 # Matriz de Confusión
-(cf.c50 <- confusionMatrix( data=prd.c50, datos.test$diagnosis))
+(cf.c50 <- confusionMatrix( data=prd.c50, datos.test$diagnosis, positive="Maligno"))
 ```
 
-La precisión ha aumentado respecto al modelo anterior sin caret. 
+La precisión ha aumentado respecto al modelo anterior sin `caret`. 
 
 Accuracy es de `r round(cf.c50$overall["Accuracy"],3)`  
 Kappa es de `r round(cf.c50$overall["Kappa"],3)`.
 
 ## Random Forest
-### Transformacion de los datos
+### Transformación de los datos
 
 El algorítmo de  *Random Forest* no requiere realizar transformaciones normalizantes de los datos, empleamos los datos de entrenamiento y test creados en el partado 3.3 y empleados en la mayoria de los algoritmos.
 
@@ -957,14 +994,14 @@ randomf
 El resultado indica que *Random Forest* incluyó `r randomf$ntree` árboles y probó `r randomf$mtry` variables en cada división. Hagamos un gráfico del modelo:
 
 ```{r}
-plot(randomf)
+plot(randomf, main="modelo Random Forest")
 ```
 
 Donde la línea roja representa el error cometido al intentar predecir el diagnóstico, y la línea verde es el error en la predicción **Benigno**. Podemos ver la mmportancia de cada una de las variables en la clasificación del modelo:
 
 ```{r}
 head(importance(randomf))
-varImpPlot(randomf)
+varImpPlot(randomf, main="Variables Random Forest")
 ```
 
 ### Predicción y Evaluación del algoritmo
@@ -988,19 +1025,20 @@ Veamos si incrementando el número de árboles el modelo mejora. Entrenamos de n
 set.seed(params$seed.clsfier)
 rf.1000 <- randomForest(diagnosis ~ ., data  = datos.train, ntree=1000)
 rf.1000
+plot(rf.1000, main="modelo Random Forest 1000 árboles")
 ```
 
 ```{r}
 predict.rf<- predict(rf.1000, datos.test)
-rf.matrix1000 <- confusionMatrix(datos.test$diagnosis, predict.rf)
+rf.matrix1000 <- confusionMatrix(datos.test$diagnosis, predict.rf,positive="Maligno")
 rf.matrix1000
 ```
 
 El nuevo modelo obtiene una precisión de `r round(rf.matrix1000$overall["Accuracy"], 3)` y una sensitividad y especificidad de `r round(rf.matrix1000$byClass["Sensitivity"], 3)` y `r round(rf.matrix1000$byClass["Specificity"], 3)` respectivamente. `r if(rf.matrix$overall["Accuracy"] > rf.matrix1000$overall["Accuracy"]){"Vemos que el modelo obtenido con un solo nodo tiene una mayor precision"}``r if(rf.matrix$overall["Accuracy"] < rf.matrix1000$overall["Accuracy"]){"Vemos que el modelo obtenido con tres nodo tiene una mayor precision"}``r if(rf.matrix$overall["Accuracy"] == cmatrix3$overall["Accuracy"]){"Vemos que ambos modelos tienen la misma precision"}`.
 
-### Paquete caret
+### Paquete *caret*
 
-Se vuelve a analizar el mismo dataset pero ahora usando el modelo `rf` del paquete caret. Y lo validadmos con 5-fold cross validation. Como sabemos, el fichero de train contiene `r nrow(datos.train)` observaciones y el de test `r nrow(datos.test)`.
+Se vuelve a analizar el mismo dataset pero ahora usando el modelo `rf` del paquete `caret`. Y lo validadmos con 5-fold cross validation. Como sabemos, el fichero de train contiene `r nrow(datos.train)` observaciones y el de test `r nrow(datos.test)`.
 
 ```{r }
 ## método : repeatedcv K-fold cross validation
@@ -1014,11 +1052,11 @@ ctrl2 <- trainControl( method="repeatedcv",
                       repeats=3)
 
 ## Tunegrid para Random Forest
-# mtry define cuantas variables se seleccionan al azar en cada split. Por 
+# mtry define cuántas variables se seleccionan al azar en cada split. Por 
 #  defecto sqrt(n.variables)
 grid_rf <- expand.grid(mtry = c(2,4,8,16))
 
-## trace <- FALSE to  suppress train iterations
+## trace <- FALSE para suprimir las iteraciones de entrenamiento
 modelo.rf.caret     <- train (diagnosis ~ .,
                   data = datos.train,
                   method ="rf",
@@ -1036,35 +1074,32 @@ para la evaliuación del rendimiento creamos la matriz de resultados:
 # Predicción del diagnóstico
 predict.rf2 <- predict(modelo.rf.caret, newdata = datos.test)
 # Matriz de Confusión
-(cfrf <- confusionMatrix(data=predict.rf2, datos.test$diagnosis))
+(cfrf <- confusionMatrix(data=predict.rf2, datos.test$diagnosis, positive="Maligno"))
 
 ```
 
-La precisión es similar al modelo anterior sin el paquete caret 
+La precisión es similar al modelo anterior sin el paquete `caret`. 
 
 Accuracy es de `r round(cfrf$overall["Accuracy"],3)`  
 Kappa es de `r round(cfrf$overall["Kappa"],3)`  
 
-# Conclusión y discusión
-## Rendimiento, interpretabilidad, ... de los algoritmos para el problema tratado
+# Resumen de resultados
 
-## Decisión del modelo más apropiado
+En la siguiente tabla se muestra un resumen con los principales parámetros obtenidos de la función `confusionMatrix` del paquete `caret` en cada uno de los algoritmos:
 
-Para poder tomar una decisión sobre cuál o cuáles podrían ser los mejores modelos a aplicar en este caso, realizo una tabla resumen con los principales parámetros obtenidos de la función `confusionMatrix` del paquete `caret` en cada uno de ellos y posteriormente los unimos en una única tabla. Muestro aqui sólo el código empleado en los tres primeros casos, en el resto empleamos el mismo código:
-
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum1 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum1[1,1:5] <- c("knn",round(cf.knn$overall[1],3),round(cf.knn$overall[2],3), round(cf.knn$byClass[1],2), round(cf.knn$byClass[2],3))
 tabla1 <- as.data.frame(resum1[,1:5])
 ```
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum2 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum2[1,1:5] <- c("knn z transf",round(cf.knn.z$overall[1],3),round(cf.knn.z$overall[2],3), round(cf.knn.z$byClass[1],2), round(cf.knn.z$byClass[2],3))
 tabla2 <- as.data.frame(resum2[,1:5])
 ```
 
-```{r echo=FALSE}
+```{r include=FALSE}
 modelo <- params$k_value
 resum <- data.frame(modelo, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 j <- 0
@@ -1077,128 +1112,153 @@ for (i in k_valor){
 }
 ```
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum3 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum3[1,1:5] <- c("Naive-Bayes L0",round(nb.matrix$overall[1],3),round(nb.matrix$overall[2],3), round(nb.matrix$byClass[1],2), round(nb.matrix$byClass[2],3))
 tabla3 <- as.data.frame(resum3[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum4 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum4[1,1:5] <- c("Naive-Bayes L1",round(nb.matrix.1$overall[1],3),round(nb.matrix.1$overall[2],3), round(nb.matrix.1$byClass[1],2), round(nb.matrix.1$byClass[2],3))
 tabla4 <- as.data.frame(resum4[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum5 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum5[1,1:5] <- c("ANN 1 nodo",round(cmatrix1$overall[1],3),round(cmatrix1$overall[2],3), round(cmatrix1$byClass[1],2), round(cmatrix1$byClass[2],3))
 tabla5 <- as.data.frame(resum5[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum6 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum6[1,1:5] <- c("ANN 3 nodos",round(cmatrix3$overall[1],3),round(cmatrix3$overall[2],3), round(cmatrix3$byClass[1],2), round(cmatrix3$byClass[2],3))
 tabla6 <- as.data.frame(resum6[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum7 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum7[1,1:5] <- c("ANN caret",round(cmatrix.nnet$overall[1],3),round(cmatrix.nnet$overall[2],3), round(cmatrix.nnet$byClass[1],2), round(cmatrix.nnet$byClass[2],3))
 tabla7 <- as.data.frame(resum7[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum8 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum8[1,1:5] <- c("ANN caret 5-fold", round(cmatrix.nnet2$overall[1],3),round(cmatrix.nnet2$overall[2],3), round(cmatrix.nnet2$byClass[1],2), round(cmatrix.nnet2$byClass[2],3))
 tabla8 <- as.data.frame(resum8[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum9 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum9[1,1:5] <- c("SVM Lineal", round(cmatrixSVM$overall[1],3),round(cmatrixSVM$overall[2],3), round(cmatrixSVM$byClass[1],2), round(cmatrixSVM$byClass[2],3))
 tabla9 <- as.data.frame(resum9[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum10 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum10[1,1:5] <- c("SVM Gauss", round(cmatrixSVM2$overall[1],3),round(cmatrixSVM2$overall[2],3), round(cmatrixSVM2$byClass[1],2), round(cmatrixSVM2$byClass[2],3))
 tabla10 <- as.data.frame(resum10[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum11 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum11[1,1:5] <- c("SVM Caret", round(svm.caret.matrix$overall[1],3),round(svm.caret.matrix$overall[2],3), round(svm.caret.matrix$byClass[1],2), round(svm.caret.matrix$byClass[2],3))
 tabla11 <- as.data.frame(resum11[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum12 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum12[1,1:5] <- c("SVM Caret 5fold", round(svm.caret.matrix5$overall[1],3),round(svm.caret.matrix5$overall[2],3), round(svm.caret.matrix5$byClass[1],2), round(svm.caret.matrix5$byClass[2],3))
 tabla12 <- as.data.frame(resum12[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum13 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum13[1,1:5] <- c("SVM Caret boots", round(res.svm.boots.matrix$overall[1],3),round(res.svm.boots.matrix$overall[2],3), round(res.svm.boots.matrix$byClass[1],2), round(res.svm.boots.matrix$byClass[2],3))
 tabla13 <- as.data.frame(resum13[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum14 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum14[1,1:5] <- c("Arbol decision", round(cf.arbol$overall[1],3),round(cf.arbol$overall[2],3), round(cf.arbol$byClass[1],2), round(cf.arbol$byClass[2],3))
 tabla14 <- as.data.frame(resum14[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum15 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum15[1,1:5] <- c("Arbol decision 10", round(cf.arbol.10$overall[1],3),round(cf.arbol.10$overall[2],3), round(cf.arbol.10$byClass[1],2), round(cf.arbol.10$byClass[2],3))
 tabla15 <- as.data.frame(resum15[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum16 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum16[1,1:5] <- c("Arbol decision caret", round(cf.c50$overall[1],3),round(cf.c50$overall[2],3), round(cf.c50$byClass[1],2), round(cf.c50$byClass[2],3))
 tabla16 <- as.data.frame(resum16[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum17 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum17[1,1:5] <- c("Random forest", round(rf.matrix$overall[1],3),round(rf.matrix$overall[2],3), round(rf.matrix$byClass[1],2), round(rf.matrix$byClass[2],3))
 tabla17 <- as.data.frame(resum17[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum18 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum18[1,1:5] <- c("Random forest 1000", round(rf.matrix1000$overall[1],3),round(rf.matrix1000$overall[2],3), round(rf.matrix1000$byClass[1],2), round(rf.matrix1000$byClass[2],3))
 tabla18 <- as.data.frame(resum18[,1:5])
 ```
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 resum19 <- data.frame(modelo=NA, Accuracy=NA, Kappa=NA, Sensitivity=NA, Specificity=NA)
 resum19[1,1:5] <- c("Random forest caret", round(cfrf$overall[1],3),round(cfrf$overall[2],3), round(cfrf$byClass[1],2), round(cfrf$byClass[2],3))
 tabla19 <- as.data.frame(resum19[,1:5])
 ```
 
-Orneamos los datos según los valores de precisión y especificidad. Como vemos esta lista cambia según ordenemos los valores teniendo en cuenta ambos parámetros al mismo tiempo, o poniendo uno de ellos como principal factor a tener en cuenta y tras ordenar la lista por uno de ellos (precisión), la ordenamos por sensibilidad.
-
-```{r message=FALSE, warning=FALSE}
+```{r include=FALSE}
 resultado.final <- data.frame(rbind(tabla1, tabla2, resum, tabla3, tabla4, tabla5, tabla6, tabla7, tabla8, tabla9, tabla10, tabla11, tabla12, tabla13, tabla14, tabla15, tabla16, tabla17, tabla18, tabla19))
 
-library(dplyr)
-resultado.final %>%
-arrange(Accuracy, Sensitivity) %>%
-tail()
-
-resultado.final %>%
-arrange(Accuracy) %>%
-arrange(Sensitivity) %>%
-tail()
 ```
 
-Por ello, el mejor modelo a aplicar dependerá de la importancia que le demos tanto a la precisión como a la sensibilidad y especificidad en la detección del cáncer de mama según nuestros resultados.
-La sensibilidad caracteriza la capacidad de la prueba para detectar la enfermedad en sujetos enfermos, lo que tras la precisión quizá debería de ser el factor a tener en cuenta y ante igualdad, un mejor valor de especificidad. El modelo con mejor precisión es *Naive-Bayes L0* sin embargo hay otros modelos con mejor sensibilidad y valores parecidos de precisión. El modelo *SVM Caret 5fold* tiene una sensibilidad muy elevada, aunque pierde levemente en precisión. *Random forest* tiene una elevada precisión y sensibilidad pero un valor muy bajo de `kappa`.
+Ordenamos los datos según los valores de precisión y especificidad.
 
-Por ello, según estos resultados, y los objetivos que buscamos con nuestros análisis tanto el modelo *SVM Caret 5fold* como *Naive-Bayes L0* serían buenos modelos y con una precisión cercana al 95% tanto en precisión como en sensibilidad y con valores de especificidad aceptables. Aunque el modelo que tiene mejores valores en cada uno de los factores es el **árbol de decisión creado con el paquete caret y 5-cross validation**.
+```{r message=FALSE, warning=FALSE}
+# Ordenados por precisión y sensibilidad
+dplyr::arrange(resultado.final, Accuracy, Sensitivity)
+
+better.results <- dplyr::filter(resultado.final, Accuracy > 0.946)
+results <- dplyr::arrange(better.results, Accuracy, Sensitivity)
+results
+```
+
+En la Tabla anterior se pueden observar que los clasificadores Naive-Bayes fueron los más acertados a la hora de clasificar las muestras de los pacientes, obteniendo un 96% de precisión. Por el contrario, se puede observar que los clasificadores ANN con el paquete `caret` y Árboles de decisión clasifican las muestras con una precisón del 89 % y 93% en promedio respectivamente.
+
+# Discusión y conslusiones
+
+El mejor modelo a aplicar dependerá de la importancia que le demos tanto a la precisión como a la sensibilidad y especificidad en la detección del cáncer de mama según nuestros resultados.
+
+Como podemos observar en el siguiente gráfico de barras todos los modelos generados tienen una accuracy por encima del 85% siendo el modelo generado por el algoritmo Naive-Bayes con Laplace 0 el que mayor potencia de clasificación tiene con una accuracy del 96.8%.
+
+```{r fig.width=8}
+ggplot(data=resultado.final, aes(x=modelo, y=Accuracy, fill=modelo)) + 
+    geom_bar(stat="identity", position="dodge") +  theme(text = element_text(size=8),
+                                                         legend.position='bottom') 
+```
+
+La sensibilidad caracteriza la capacidad de la prueba para detectar la enfermedad en sujetos enfermos, lo que tras la precisión quizá debería de ser el factor a tener en cuenta y ante igualdad, un mejor valor de especificidad. El modelo con mejor precisión es *Naive-Bayes L0* sin embargo hay otros modelos con mejor sensibilidad y valores parecidos de precisión. *Random forest* tiene una elevada precisión y sensibilidad pero un valor muy bajo de `kappa`. *Arbol decision caret* tiene elevada Sensibilidad y pero menor percisión y specificidad.
+
+Para este conjunto de datos, los modelos que han tenido menos potencia de clasificación han sido los generados por el algoritmo de Artificial Neural Network (ANN)  del paquete `caret`, por debajo del 90% de accuracy.
+
+El algoritmo de árboles de decisión y Random Forest han tenido valores intermedios de Accuracy, sin embargo con valores elevados de Sensibility.
+
+He encontrado diferencias significativas a la hora de generar el modelo con paquetes específicos de cada algoritmo o utilizando el paquete `caret`, especialmente con el algoritmo SVM que mejora significamente si empleamos algún método como 5-fold validation o boostrapping. En cambio con el algoritmo ANN los resultados con `caret` muestran menos potencia.
+
+Como conslusión, según estos resultados y los objetivos que buscamos con nuestros análisis, el modelo *Naive-Bayes L0* sería el más apropiado, con un porcentaje cercano al 95% tanto en precisión como en sensibilidad y con valores de kappa y especificidad aceptables, lo que podemos apreciar observando el siguiente gráfico donde podemos compararlo con los otros modelos que han mostrado mejores resultados:
+
+```{r fig.width=8}
+ggplot(data=results, aes(x=modelo, y=Accuracy, fill=Sensitivity)) + 
+    geom_bar(stat="identity", position="dodge") +  theme(text = element_text(size=8),
+                                                         legend.position='bottom') 
+```
 
 # Bibliografía
 
